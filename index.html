@@ -2006,6 +2006,17 @@
         </select>
       </div>
       <div class="fg2" style="margin-top: 14px">
+        <label>🖼️ Imagem Fixa do Cron (opcional)</label>
+        <input type="url" id="c-img" placeholder="https://drive.google.com/uc?id=… ou qualquer URL pública de imagem" oninput="previewCronImg(this.value)">
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5">
+          Se preenchida, esta imagem será usada em <strong>todos</strong> os disparos deste horário, ignorando a imagem do produto. Útil para banners de campanha ou divulgação fixa.<br>
+          <span style="color:var(--blue)">💡 Google Drive: compartilhe o arquivo → <code style="font-family:var(--mono);font-size:10px">uc?export=view&id=ID_DO_ARQUIVO</code></span>
+        </div>
+        <div id="c-img-preview" style="display:none;margin-top:10px;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--border);max-height:140px">
+          <img id="c-img-preview-el" src="" alt="preview" style="width:100%;height:140px;object-fit:cover;display:block">
+        </div>
+      </div>
+      <div class="fg2" style="margin-top: 14px">
         <label>Template da Mensagem (Deixe vazio para usar o Base)</label>
         <textarea id="c-tmpl" class="tmpl-textarea"
           placeholder="Ex: 🛍 *OFERTA EXCLUSIVA DAS 18H!*\n\n[titulo] por apenas [preco]!"></textarea>
@@ -2285,7 +2296,8 @@
         if (cronData.length === 0) grid.innerHTML = '<div style="grid-column:1/-1"><div class="empty"><div class="eico">⏰</div>Nenhum agendamento.</div></div>';
         else grid.innerHTML = cronData.map(c => `<div class="cron-card">
       <div class="cron-card-header"><div class="cron-time">⏰ ${c.Horario}</div><span class="badge ${c.Ativo === 'sim' ? 'b-done' : 'b-pau'}">${c.Ativo === 'sim' ? 'Ativo' : 'Pausado'}</span></div>
-      <div class="cron-tmpl-preview">${c.Template ? esc(c.Template) : '<i>Template Base Padrão</i>'}</div>
+      ${c.Imagem ? `<div style="border-radius:var(--r);overflow:hidden;margin-bottom:8px;max-height:90px"><img src="${esc(c.Imagem)}" alt="imagem fixa" style="width:100%;height:90px;object-fit:cover;display:block" onerror="this.parentElement.style.display='none'"></div>` : ''}
+      <div class="cron-tmpl-preview">${c.Template ? esc(c.Template) : '<i>Template Base Padrão</i>'}${c.Imagem ? ' <span style="color:var(--blue);font-size:10px;font-weight:700">🖼 Imagem fixa</span>' : ''}</div>
       <div style="display:flex;gap:8px;margin-top:4px">
         <button class="btn btn-ghost btn-sm btn-full" onclick="openCronModal('${c.ID}')">✏️ Editar</button>
         <button class="btn btn-danger btn-sm" onclick="deleteCron('${c.ID}')">🗑</button>
@@ -2303,23 +2315,47 @@
         document.getElementById('c-horario').value = m
           ? String(m[1]).padStart(2, '0') + ':' + m[2]
           : '12:00';
+        document.getElementById('c-ativo').value = c.Ativo || 'sim';
+        document.getElementById('c-tmpl').value = c.Template || '';
+        document.getElementById('c-img').value = c.Imagem || '';
+        previewCronImg(c.Imagem || '');
         document.getElementById('mcron-title').textContent = 'Editar Agendamento';
       } else {
-        document.getElementById('c-horario').value = '12:00'; document.getElementById('c-ativo').value = 'sim'; document.getElementById('c-tmpl').value = '';
+        document.getElementById('c-horario').value = '12:00';
+        document.getElementById('c-ativo').value = 'sim';
+        document.getElementById('c-tmpl').value = '';
+        document.getElementById('c-img').value = '';
+        previewCronImg('');
         document.getElementById('mcron-title').textContent = 'Novo Agendamento';
       }
       document.getElementById('modal-cron').classList.add('open');
     }
 
-    function closeCronModal() { document.getElementById('modal-cron').classList.remove('open'); }
+    function previewCronImg(url) {
+      const wrap = document.getElementById('c-img-preview');
+      const el = document.getElementById('c-img-preview-el');
+      if (url && url.startsWith('http')) {
+        el.src = url;
+        wrap.style.display = 'block';
+        el.onerror = () => { wrap.style.display = 'none'; };
+      } else {
+        wrap.style.display = 'none';
+        el.src = '';
+      }
+    }
+
+    function closeCronModal() {
+      document.getElementById('modal-cron').classList.remove('open');
+      document.getElementById('c-img-preview').style.display = 'none';
+    }
 
     async function saveCron() {
-      const id = document.getElementById('c-id').value, horario = document.getElementById('c-horario').value, ativo = document.getElementById('c-ativo').value, template = document.getElementById('c-tmpl').value;
+      const id = document.getElementById('c-id').value, horario = document.getElementById('c-horario').value, ativo = document.getElementById('c-ativo').value, template = document.getElementById('c-tmpl').value, imagem = document.getElementById('c-img').value.trim();
       if (!horario) return toast('Selecione um horário', 'err');
       const btn = document.getElementById('btn-save-cron'), sp = document.getElementById('cron-sp');
       btn.disabled = true; sp.classList.add('on');
       try {
-        const r = await apiPost({ action: 'salvar_cron', id, horario, ativo, template });
+        const r = await apiPost({ action: 'salvar_cron', id, horario, ativo, template, imagem });
         if (r.status === 'sucesso') { toast('Agendamento salvo na Planilha!'); closeCronModal(); await loadCrons(); await syncBotCrons(); }
       } catch (e) { toast('Erro ao salvar', 'err'); } finally { btn.disabled = false; sp.classList.remove('on'); }
     }
