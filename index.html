@@ -2007,10 +2007,13 @@
       </div>
       <div class="fg2" style="margin-top: 14px">
         <label>🖼️ Imagem Fixa do Cron (opcional)</label>
-        <input type="url" id="c-img" placeholder="https://drive.google.com/uc?id=… ou qualquer URL pública de imagem" oninput="previewCronImg(this.value)">
+        <div style="position:relative">
+          <input type="text" id="c-img" placeholder="Cole o ID do arquivo do Google Drive (ex: 1aBcD2eFgH…)" oninput="previewCronImg(this.value)" style="padding-right:110px">
+          <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:var(--text3);font-family:var(--mono);pointer-events:none">drive.google.com</span>
+        </div>
         <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5">
-          Se preenchida, esta imagem será usada em <strong>todos</strong> os disparos deste horário, ignorando a imagem do produto. Útil para banners de campanha ou divulgação fixa.<br>
-          <span style="color:var(--blue)">💡 Google Drive: compartilhe o arquivo → <code style="font-family:var(--mono);font-size:10px">uc?export=view&id=ID_DO_ARQUIVO</code></span>
+          Abra o arquivo no Google Drive → <strong>Compartilhar → Qualquer pessoa com o link</strong> → copie só o ID da URL:<br>
+          <code style="font-family:var(--mono);font-size:10px;background:var(--surface3);padding:2px 6px;border-radius:4px">drive.google.com/file/d/<strong style="color:var(--accent)">SEU_ID_AQUI</strong>/view</code>
         </div>
         <div id="c-img-preview" style="display:none;margin-top:10px;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--border);max-height:140px">
           <img id="c-img-preview-el" src="" alt="preview" style="width:100%;height:140px;object-fit:cover;display:block">
@@ -2317,8 +2320,12 @@
           : '12:00';
         document.getElementById('c-ativo').value = c.Ativo || 'sim';
         document.getElementById('c-tmpl').value = c.Template || '';
-        document.getElementById('c-img').value = c.Imagem || '';
-        previewCronImg(c.Imagem || '');
+        // Salva/exibe sempre o ID puro (extrai de URL se necessário)
+        const imgRaw = c.Imagem || '';
+        const imgIdMatch = imgRaw.match(/[?&]id=([^&]+)/) || imgRaw.match(/\/d\/([^/]+)/);
+        const imgId = imgIdMatch ? imgIdMatch[1] : imgRaw;
+        document.getElementById('c-img').value = imgId;
+        previewCronImg(imgId);
         document.getElementById('mcron-title').textContent = 'Editar Agendamento';
       } else {
         document.getElementById('c-horario').value = '12:00';
@@ -2331,10 +2338,18 @@
       document.getElementById('modal-cron').classList.add('open');
     }
 
-    function previewCronImg(url) {
+    function driveUrl(idOrUrl) {
+      if (!idOrUrl) return '';
+      const s = idOrUrl.trim();
+      if (s.startsWith('http')) return s;
+      return `https://drive.google.com/uc?export=view&id=${s}`;
+    }
+
+    function previewCronImg(val) {
       const wrap = document.getElementById('c-img-preview');
       const el = document.getElementById('c-img-preview-el');
-      if (url && url.startsWith('http')) {
+      const url = driveUrl(val);
+      if (url) {
         el.src = url;
         wrap.style.display = 'block';
         el.onerror = () => { wrap.style.display = 'none'; };
