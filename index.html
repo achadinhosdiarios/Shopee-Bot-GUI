@@ -2008,15 +2008,21 @@
       <div class="fg2" style="margin-top: 14px">
         <label>🖼️ Imagem Fixa do Cron (opcional)</label>
         <div style="position:relative">
-          <input type="text" id="c-img" placeholder="Cole o ID do arquivo do Google Drive (ex: 1aBcD2eFgH…)" oninput="previewCronImg(this.value)" style="padding-right:110px">
-          <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:var(--text3);font-family:var(--mono);pointer-events:none">drive.google.com</span>
+          <input type="text" id="c-img" placeholder="Cole o ID do arquivo do Google Drive (ex: 1aBcD2eFgH…)"
+            oninput="previewCronImg(this.value)" style="padding-right:110px">
+          <span
+            style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:var(--text3);font-family:var(--mono);pointer-events:none">drive.google.com</span>
         </div>
         <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5">
-          Abra o arquivo no Google Drive → <strong>Compartilhar → Qualquer pessoa com o link</strong> → copie só o ID da URL:<br>
-          <code style="font-family:var(--mono);font-size:10px;background:var(--surface3);padding:2px 6px;border-radius:4px">drive.google.com/file/d/<strong style="color:var(--accent)">SEU_ID_AQUI</strong>/view</code>
+          Abra o arquivo no Google Drive → <strong>Compartilhar → Qualquer pessoa com o link</strong> → copie só o ID da
+          URL:<br>
+          <code
+            style="font-family:var(--mono);font-size:10px;background:var(--surface3);padding:2px 6px;border-radius:4px">drive.google.com/file/d/<strong style="color:var(--accent)">SEU_ID_AQUI</strong>/view</code>
         </div>
-        <div id="c-img-preview" style="display:none;margin-top:10px;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--border);max-height:140px">
-          <img id="c-img-preview-el" src="" alt="preview" style="width:100%;height:140px;object-fit:cover;display:block">
+        <div id="c-img-preview"
+          style="display:none;margin-top:10px;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--border);max-height:140px">
+          <img id="c-img-preview-el" src="" alt="preview"
+            style="width:100%;height:140px;object-fit:cover;display:block">
         </div>
       </div>
       <div class="fg2" style="margin-top: 14px">
@@ -2408,8 +2414,27 @@
       document.getElementById('h-tot').textContent = total; document.getElementById('h-suc').textContent = suc; document.getElementById('h-err').textContent = total - suc;
       if (!data.length) { grid.innerHTML = '<div style="grid-column:1/-1"><div class="empty"><div class="eico">📭</div>Nada registrado.</div></div>'; return; }
       grid.innerHTML = data.map(h => {
-        const prod = prods.find(p => p.ID === h.ID_Produto) || {}, titulo = prod.Título || h.ID_Produto || 'Produto', imagem = prod.Imagem || '', preco = prod.Preço ? fp(prod.Preço) : '—';
         const msgId = h.MessageID || '';
+        const isCron = (h.ID_Produto || '').startsWith('CRON_');
+
+        if (isCron) {
+          // Card de banner/CRON — sem produto associado
+          const cronTime = (h.ID_Produto || '').replace('CRON_', '').replace(/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$3/$2/$1 $4:$5');
+          return `<div class="hist-card">
+        <div class="hist-card-img-ph" style="background:var(--accent-l);color:var(--accent);font-size:22px">⏰</div>
+        <div class="hist-card-body">
+          <div class="hist-card-meta"><span class="badge ${h.Status_Final === 'sucesso' ? 'b-done' : 'b-no'}">${esc(h.Status_Final || '—')}</span><span class="hist-card-platform" style="color:var(--accent);font-weight:800">Banner CRON</span></div>
+          <div class="hist-card-name" style="color:var(--text2);font-style:italic">Disparo agendado automático</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><span class="hist-card-price">—</span><span class="hist-card-date">${esc(h.Data_Envio || '—')}</span></div>
+          ${msgId ? `<div style="font-size:10px;color:var(--text3);margin-top:5px;font-family:var(--mono)">msg_id: ${esc(msgId)}</div>` : ''}
+        </div>
+        <div class="hist-card-footer">
+          <button class="btn btn-danger btn-xs btn-full" onclick="apagarCron('${h.ID_Produto}', '${msgId}')">🗑️ Apagar do Canal</button>
+        </div>
+      </div>`;
+        }
+
+        const prod = prods.find(p => p.ID === h.ID_Produto) || {}, titulo = prod.Título || h.ID_Produto || 'Produto', imagem = prod.Imagem || '', preco = prod.Preço ? fp(prod.Preço) : '—';
         return `<div class="hist-card">
       ${imagem ? `<img class="hist-card-img" src="${esc(imagem)}" onerror="this.src='';this.className='hist-card-img-ph';this.innerHTML='🛍'">` : `<div class="hist-card-img-ph">🛍</div>`}
       <div class="hist-card-body">
@@ -2474,16 +2499,34 @@
       }
     }
 
-    async function editarTelegram(id, msgId) {
-      if (!msgId) return toast('Sem message_id salvo.', 'warn');
-      const p = prods.find(x => x.ID === id); if (!p) return toast('Produto não achado.', 'err');
+    async function apagarCron(cronId, msgId) {
+      if (!msgId) return toast('Sem message_id salvo — mensagem já pode ter expirado.', 'warn');
+      if (!confirm('Apagar esta mensagem do canal Telegram?')) return;
+      let botOk = false;
       try {
-        const j = await botFetch('/editar-oferta', { message_id: msgId, titulo: p.Título || '', preco: fp(p.Preço) || '', categoria: p.Categoria || '', link: p.Link || '', imagem: p.Imagem || '' });
-        if (j.status) toast('Mensagem editada no Telegram!');
+        await botFetch('/apagar-oferta', { message_id: msgId });
+        botOk = true;
       } catch (e) {
-        if (e.message.includes("is not modified")) toast('Nenhuma alteração detectada. (idêntico)', 'warn');
-        else toast(e.message, 'err');
+        if (e.message.includes("not found")) botOk = true; else toast(e.message, 'err');
       }
+      if (botOk) {
+        try {
+          // apagar_historico pelo message_id; findRowById não acha CRON_ na planilha de produtos, o que é seguro
+          await apiPost({ action: 'apagar_historico', id_produto: cronId, message_id: msgId });
+          toast('Banner apagado do canal!'); await loadHistorico();
+        } catch (err) { toast('Erro ao limpar histórico.', 'err'); }
+      }
+    }
+
+
+    if (!msgId) return toast('Sem message_id salvo.', 'warn');
+    const p = prods.find(x => x.ID === id); if (!p) return toast('Produto não achado.', 'err');
+    try {
+      const j = await botFetch('/editar-oferta', { message_id: msgId, titulo: p.Título || '', preco: fp(p.Preço) || '', categoria: p.Categoria || '', link: p.Link || '', imagem: p.Imagem || '' });
+      if (j.status) toast('Mensagem editada no Telegram!');
+    } catch (e) {
+      if (e.message.includes("is not modified")) toast('Nenhuma alteração detectada. (idêntico)', 'warn');
+      else toast(e.message, 'err');
     }
 
     // -- EDIÇÃO PRODUTO (MODAL) --
