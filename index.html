@@ -2120,7 +2120,10 @@
       if (!c.scriptUrl) throw new Error("URL do Apps Script não configurada.");
       const payload = { ...body, key: authTok || c.pass };
       const r = await fetchWithTimeout(c.scriptUrl, {
-        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload),
+        method: 'POST',
+        mode: 'no-cors',                                        // ← ADD
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload),
       });
       if (r.type === 'opaque') return { status: 'sucesso' };
       return r.json();
@@ -2295,7 +2298,11 @@
       document.getElementById('c-id').value = id || '';
       if (id) {
         const c = cronData.find(x => x.ID === id);
-        document.getElementById('c-horario').value = c.Horario; document.getElementById('c-ativo').value = c.Ativo; document.getElementById('c-tmpl').value = c.Template || '';
+        const raw = c.Horario || '';
+        const m = raw.match(/(\d{1,2}):(\d{2})/);
+        document.getElementById('c-horario').value = m
+          ? String(m[1]).padStart(2, '0') + ':' + m[2]
+          : '12:00';
         document.getElementById('mcron-title').textContent = 'Editar Agendamento';
       } else {
         document.getElementById('c-horario').value = '12:00'; document.getElementById('c-ativo').value = 'sim'; document.getElementById('c-tmpl').value = '';
