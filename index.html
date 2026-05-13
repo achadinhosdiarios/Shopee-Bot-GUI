@@ -1529,8 +1529,28 @@
         </div>
       </div>
       <div class="login-card">
-        <h2>Acessar painel</h2>
-        <p>Use suas credenciais de administrador.</p>
+        <h2 id="l-title">Acessar painel</h2>
+        <p id="l-sub">Use suas credenciais de administrador.</p>
+
+        <div id="l-setup" style="display:none">
+          <div style="background:var(--yellow-l);border:1.5px solid var(--yellow);border-radius:var(--r);padding:12px 14px;margin-bottom:18px;font-size:12px;font-weight:600;color:var(--yellow)">
+            ⚙️ Primeira configuração — preencha os dados abaixo para continuar.
+          </div>
+          <div class="field">
+            <label>Google Apps Script URL *</label>
+            <input id="l-script" type="url" placeholder="https://script.google.com/macros/s/.../exec">
+          </div>
+          <div class="field">
+            <label>Hostname FastAPI (Discloud) *</label>
+            <input id="l-bot" type="url" placeholder="https://SEU-APP.discloud.app">
+          </div>
+          <div class="field">
+            <label>API Secret Token *</label>
+            <input id="l-secret" type="password" placeholder="Chave do bot…" autocomplete="off">
+          </div>
+          <div style="height:1px;background:var(--border);margin:18px 0"></div>
+        </div>
+
         <div class="field">
           <label>E-mail</label>
           <input id="l-email" type="email" placeholder="admin@email.com" autocomplete="username">
@@ -2008,21 +2028,15 @@
       <div class="fg2" style="margin-top: 14px">
         <label>🖼️ Imagem Fixa do Cron (opcional)</label>
         <div style="position:relative">
-          <input type="text" id="c-img" placeholder="Cole o ID do arquivo do Google Drive (ex: 1aBcD2eFgH…)"
-            oninput="previewCronImg(this.value)" style="padding-right:110px">
-          <span
-            style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:var(--text3);font-family:var(--mono);pointer-events:none">drive.google.com</span>
+          <input type="text" id="c-img" placeholder="Cole o ID do arquivo do Google Drive (ex: 1aBcD2eFgH…)" oninput="previewCronImg(this.value)" style="padding-right:110px">
+          <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:var(--text3);font-family:var(--mono);pointer-events:none">drive.google.com</span>
         </div>
         <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5">
-          Abra o arquivo no Google Drive → <strong>Compartilhar → Qualquer pessoa com o link</strong> → copie só o ID da
-          URL:<br>
-          <code
-            style="font-family:var(--mono);font-size:10px;background:var(--surface3);padding:2px 6px;border-radius:4px">drive.google.com/file/d/<strong style="color:var(--accent)">SEU_ID_AQUI</strong>/view</code>
+          Abra o arquivo no Google Drive → <strong>Compartilhar → Qualquer pessoa com o link</strong> → copie só o ID da URL:<br>
+          <code style="font-family:var(--mono);font-size:10px;background:var(--surface3);padding:2px 6px;border-radius:4px">drive.google.com/file/d/<strong style="color:var(--accent)">SEU_ID_AQUI</strong>/view</code>
         </div>
-        <div id="c-img-preview"
-          style="display:none;margin-top:10px;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--border);max-height:140px">
-          <img id="c-img-preview-el" src="" alt="preview"
-            style="width:100%;height:140px;object-fit:cover;display:block">
+        <div id="c-img-preview" style="display:none;margin-top:10px;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--border);max-height:140px">
+          <img id="c-img-preview-el" src="" alt="preview" style="width:100%;height:140px;object-fit:cover;display:block">
         </div>
       </div>
       <div class="fg2" style="margin-top: 14px">
@@ -2185,16 +2199,40 @@
       const em = document.getElementById('l-email').value.trim(), pw = document.getElementById('l-pass').value;
       const sp = document.getElementById('l-spin'), er = document.getElementById('l-err'), btn = document.getElementById('btn-login');
       er.style.display = 'none'; sp.classList.add('on'); btn.disabled = true;
+
+      // Se o modo setup estiver visível, salva a config antes de qualquer coisa
+      const setupVisible = document.getElementById('l-setup').style.display !== 'none';
+      if (setupVisible) {
+        const scriptUrl = document.getElementById('l-script').value.trim();
+        const botUrl = document.getElementById('l-bot').value.trim().replace(/\/$/, '');
+        const secret = document.getElementById('l-secret').value;
+        if (!scriptUrl || !em || !pw) {
+          er.textContent = 'Preencha a URL do Apps Script, e-mail e senha.'; er.style.display = 'block';
+          sp.classList.remove('on'); btn.disabled = false; return;
+        }
+        sCfg({ ...getCfg(), scriptUrl, botUrl, email: em, pass: pw, secret });
+      }
+
       const cfg = getCfg();
-      try {
-        const r = await fetchWithTimeout(cfg.scriptUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'login', email: em, password: pw }) });
-        const j = await r.json();
-        if (j.autorizado) { authTok = j.token; localStorage.setItem('acd_auth_v5', authTok); boot(); }
-        else { er.textContent = 'Credenciais rejeitadas.'; er.style.display = 'block'; }
-      } catch (e) {
-        if (em === cfg.email && pw === cfg.pass) { authTok = cfg.pass; localStorage.setItem('acd_auth_v5', authTok); boot(); }
-        else { er.textContent = 'Credenciais inválidas ou erro de rede.'; er.style.display = 'block'; }
-      } finally { sp.classList.remove('on'); btn.disabled = false }
+
+      if (!cfg.scriptUrl) {
+        er.textContent = 'Configure a URL do Apps Script antes de logar.'; er.style.display = 'block';
+        sp.classList.remove('on'); btn.disabled = false; return;
+      }
+
+      if (em === cfg.email && pw === cfg.pass && em) {
+        try {
+          await fetchWithTimeout(cfg.scriptUrl, {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'login', email: em, password: pw, key: cfg.pass }),
+          });
+        } catch (_) { /* ignora erro de rede */ }
+        authTok = cfg.pass; localStorage.setItem('acd_auth_v5', authTok); boot();
+      } else {
+        er.textContent = 'Credenciais inválidas.'; er.style.display = 'block';
+        sp.classList.remove('on'); btn.disabled = false;
+      }
     }
 
     function doLogout() { authTok = null; localStorage.removeItem('acd_auth_v5'); document.getElementById('login-screen').style.cssText = 'display:flex;opacity:1'; document.getElementById('app').style.display = 'none'; }
@@ -2518,15 +2556,16 @@
       }
     }
 
-
-    if (!msgId) return toast('Sem message_id salvo.', 'warn');
-    const p = prods.find(x => x.ID === id); if (!p) return toast('Produto não achado.', 'err');
-    try {
-      const j = await botFetch('/editar-oferta', { message_id: msgId, titulo: p.Título || '', preco: fp(p.Preço) || '', categoria: p.Categoria || '', link: p.Link || '', imagem: p.Imagem || '' });
-      if (j.status) toast('Mensagem editada no Telegram!');
-    } catch (e) {
-      if (e.message.includes("is not modified")) toast('Nenhuma alteração detectada. (idêntico)', 'warn');
-      else toast(e.message, 'err');
+    async function editarTelegram(id, msgId) {
+      if (!msgId) return toast('Sem message_id salvo.', 'warn');
+      const p = prods.find(x => x.ID === id); if (!p) return toast('Produto não achado.', 'err');
+      try {
+        const j = await botFetch('/editar-oferta', { message_id: msgId, titulo: p.Título || '', preco: fp(p.Preço) || '', categoria: p.Categoria || '', link: p.Link || '', imagem: p.Imagem || '' });
+        if (j.status) toast('Mensagem editada no Telegram!');
+      } catch (e) {
+        if (e.message.includes("is not modified")) toast('Nenhuma alteração detectada. (idêntico)', 'warn');
+        else toast(e.message, 'err');
+      }
     }
 
     // -- EDIÇÃO PRODUTO (MODAL) --
@@ -2578,7 +2617,18 @@
     }
     async function checkBot() { const c = getCfg(); if (!c.botUrl) return; try { await fetchWithTimeout(`${c.botUrl}/ping`, { timeout: 8000 }); document.getElementById('bot-pulse').className = 'pulse on'; document.getElementById('bot-lbl').textContent = 'Bot Ativo'; } catch (e) { document.getElementById('bot-pulse').className = 'pulse err'; document.getElementById('bot-lbl').textContent = 'Bot Offline'; } }
 
-    window.onload = () => { const saved = localStorage.getItem('acd_auth_v5'); if (saved) { authTok = saved; boot(); } };
+    window.onload = () => {
+      initTheme();
+      const saved = localStorage.getItem('acd_auth_v5');
+      if (saved) { authTok = saved; boot(); return; }
+      // Primeiro acesso: sem config salva → mostra campos de setup
+      const cfg = getCfg();
+      if (!cfg.scriptUrl && !cfg.email) {
+        document.getElementById('l-setup').style.display = 'block';
+        document.getElementById('l-title').textContent = 'Configuração inicial';
+        document.getElementById('l-sub').textContent = 'Preencha os dados do projeto para começar.';
+      }
+    };
   </script>
 </body>
 
