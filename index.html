@@ -1533,7 +1533,8 @@
         <p id="l-sub">Use suas credenciais de administrador.</p>
 
         <div id="l-setup" style="display:none">
-          <div style="background:var(--yellow-l);border:1.5px solid var(--yellow);border-radius:var(--r);padding:12px 14px;margin-bottom:18px;font-size:12px;font-weight:600;color:var(--yellow)">
+          <div
+            style="background:var(--yellow-l);border:1.5px solid var(--yellow);border-radius:var(--r);padding:12px 14px;margin-bottom:18px;font-size:12px;font-weight:600;color:var(--yellow)">
             ⚙️ Primeira configuração — preencha os dados abaixo para continuar.
           </div>
           <div class="field">
@@ -2028,15 +2029,21 @@
       <div class="fg2" style="margin-top: 14px">
         <label>🖼️ Imagem Fixa do Cron (opcional)</label>
         <div style="position:relative">
-          <input type="text" id="c-img" placeholder="Cole o ID do arquivo do Google Drive (ex: 1aBcD2eFgH…)" oninput="previewCronImg(this.value)" style="padding-right:110px">
-          <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:var(--text3);font-family:var(--mono);pointer-events:none">drive.google.com</span>
+          <input type="text" id="c-img" placeholder="Cole o ID do arquivo do Google Drive (ex: 1aBcD2eFgH…)"
+            oninput="previewCronImg(this.value)" style="padding-right:110px">
+          <span
+            style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:var(--text3);font-family:var(--mono);pointer-events:none">drive.google.com</span>
         </div>
         <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5">
-          Abra o arquivo no Google Drive → <strong>Compartilhar → Qualquer pessoa com o link</strong> → copie só o ID da URL:<br>
-          <code style="font-family:var(--mono);font-size:10px;background:var(--surface3);padding:2px 6px;border-radius:4px">drive.google.com/file/d/<strong style="color:var(--accent)">SEU_ID_AQUI</strong>/view</code>
+          Abra o arquivo no Google Drive → <strong>Compartilhar → Qualquer pessoa com o link</strong> → copie só o ID da
+          URL:<br>
+          <code
+            style="font-family:var(--mono);font-size:10px;background:var(--surface3);padding:2px 6px;border-radius:4px">drive.google.com/file/d/<strong style="color:var(--accent)">SEU_ID_AQUI</strong>/view</code>
         </div>
-        <div id="c-img-preview" style="display:none;margin-top:10px;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--border);max-height:140px">
-          <img id="c-img-preview-el" src="" alt="preview" style="width:100%;height:140px;object-fit:cover;display:block">
+        <div id="c-img-preview"
+          style="display:none;margin-top:10px;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--border);max-height:140px">
+          <img id="c-img-preview-el" src="" alt="preview"
+            style="width:100%;height:140px;object-fit:cover;display:block">
         </div>
       </div>
       <div class="fg2" style="margin-top: 14px">
@@ -2130,10 +2137,10 @@
     function clearLog() { logEntries = []; renderLog(); toast('Buffer limpo.') }
 
     async function fetchWithTimeout(resource, options = {}) {
-      const { timeout = 20000 } = options;
+      const { timeout = 20000, ...fetchOptions } = options;
       const ctrl = new AbortController();
       const id = setTimeout(() => ctrl.abort(), timeout);
-      const res = await fetch(resource, { ...options, redirect: 'follow', signal: ctrl.signal });
+      const res = await fetch(resource, { redirect: 'follow', ...fetchOptions, signal: ctrl.signal });
       clearTimeout(id);
       return res;
     }
@@ -2155,7 +2162,7 @@
       const payload = { ...body, key: authTok || c.pass };
       const r = await fetchWithTimeout(c.scriptUrl, {
         method: 'POST',
-        mode: 'no-cors',                                        // ← ADD
+        mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload),
       });
@@ -2200,7 +2207,6 @@
       const sp = document.getElementById('l-spin'), er = document.getElementById('l-err'), btn = document.getElementById('btn-login');
       er.style.display = 'none'; sp.classList.add('on'); btn.disabled = true;
 
-      // Se o modo setup estiver visível, salva a config antes de qualquer coisa
       const setupVisible = document.getElementById('l-setup').style.display !== 'none';
       if (setupVisible) {
         const scriptUrl = document.getElementById('l-script').value.trim();
@@ -2227,7 +2233,7 @@
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'login', email: em, password: pw, key: cfg.pass }),
           });
-        } catch (_) { /* ignora erro de rede */ }
+        } catch (_) { }
         authTok = cfg.pass; localStorage.setItem('acd_auth_v5', authTok); boot();
       } else {
         er.textContent = 'Credenciais inválidas.'; er.style.display = 'block';
@@ -2270,7 +2276,7 @@
           if (document.getElementById('p-produtos').classList.contains('active')) filterTbl();
           sync.textContent = `Sincronizado: ${new Date().toLocaleTimeString('pt-BR')}`;
           addLog(`DB sincronizado — ${prods.length} produtos.`, 'ok');
-          await loadCrons(); // Carrega os crons também
+          await loadCrons();
         }
       } catch (e) {
         addLog(`Erro sincronização: ${e.message}`, 'err'); toast('Erro ao buscar planilha', 'err');
@@ -2364,7 +2370,6 @@
           : '12:00';
         document.getElementById('c-ativo').value = c.Ativo || 'sim';
         document.getElementById('c-tmpl').value = c.Template || '';
-        // Salva/exibe sempre o ID puro (extrai de URL se necessário)
         const imgRaw = c.Imagem || '';
         const imgIdMatch = imgRaw.match(/[?&]id=([^&]+)/) || imgRaw.match(/\/d\/([^/]+)/);
         const imgId = imgIdMatch ? imgIdMatch[1] : imgRaw;
@@ -2456,8 +2461,6 @@
         const isCron = (h.ID_Produto || '').startsWith('CRON_');
 
         if (isCron) {
-          // Card de banner/CRON — sem produto associado
-          const cronTime = (h.ID_Produto || '').replace('CRON_', '').replace(/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$3/$2/$1 $4:$5');
           return `<div class="hist-card">
         <div class="hist-card-img-ph" style="background:var(--accent-l);color:var(--accent);font-size:22px">⏰</div>
         <div class="hist-card-body">
@@ -2490,7 +2493,7 @@
       }).join('');
     }
 
-    // -- AÇÕES DO BOT (FORÇAR, ENVIAR, APAGAR) --
+    // -- AÇÕES DO BOT --
     async function qSend(id, btnEl) {
       const p = prods.find(x => x.ID === id); if (!p) return;
       if (btnEl) btnEl.disabled = true; toast('Enviando para o Telegram…', 'warn');
@@ -2549,7 +2552,6 @@
       }
       if (botOk) {
         try {
-          // apagar_historico pelo message_id; findRowById não acha CRON_ na planilha de produtos, o que é seguro
           await apiPost({ action: 'apagar_historico', id_produto: cronId, message_id: msgId });
           toast('Banner apagado do canal!'); await loadHistorico();
         } catch (err) { toast('Erro ao limpar histórico.', 'err'); }
@@ -2590,8 +2592,22 @@
     async function testConn() {
       const c = getCfg(), sp = document.getElementById('test-sp'), res = document.getElementById('test-result');
       sp.classList.add('on'); res.style.display = 'none'; const results = [];
-      try { const r = await fetchWithTimeout(`${c.scriptUrl}?key=${encodeURIComponent(authTok || c.pass)}&action=listar`); const j = await r.json(); results.push(`<div style="color:var(--green)">✅ Apps Script: OK (${j.produtos?.length || 0} itens)</div>`); } catch (e) { results.push(`<div style="color:var(--red)">❌ Apps Script: ${e.message}</div>`) }
-      try { const r = await fetchWithTimeout(`${c.botUrl}/ping?secret=${encodeURIComponent(c.secret)}`, { timeout: 8000 }); const j = await r.json(); results.push(`<div style="color:var(--green)">✅ Bot Discloud: Online</div>`); } catch (e) { results.push(`<div style="color:var(--red)">❌ Bot Discloud: ${e.message}</div>`) }
+      // Testa Apps Script
+      try {
+        const r = await fetchWithTimeout(`${c.scriptUrl}?key=${encodeURIComponent(authTok || c.pass)}&action=listar`);
+        const j = await r.json();
+        results.push(`<div style="color:var(--green)">✅ Apps Script: OK (${j.produtos?.length || 0} itens)</div>`);
+      } catch (e) { results.push(`<div style="color:var(--red)">❌ Apps Script: ${e.message}</div>`) }
+      // ← Testa Bot via GET (método correto para /ping)
+      try {
+        const r = await fetchWithTimeout(`${c.botUrl}/ping`, {
+          method: 'GET',
+          redirect: 'follow',
+          timeout: 8000
+        });
+        const j = await r.json();
+        results.push(`<div style="color:var(--green)">✅ Bot Discloud: Online — ${j.hora || ''}</div>`);
+      } catch (e) { results.push(`<div style="color:var(--red)">❌ Bot Discloud: ${e.message}</div>`) }
       res.innerHTML = `<div style="padding:18px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);display:flex;flex-direction:column;gap:10px;font-size:13px;font-weight:700">${results.join('')}</div>`;
       sp.classList.remove('on'); res.style.display = 'block';
     }
@@ -2606,22 +2622,51 @@
       try { const j = await botFetch('/enviar-oferta', { titulo, link, imagem, preco }); if (j.status) { toast('Avulso enviado!'); closeDrawer(); loadAll(); } } catch (e) { toast(e.message, 'err') } finally { btn.disabled = false; sp.classList.remove('on') }
     }
 
+    // ← checkBot corrigido: usa GET explícito, sem body, com redirect:follow
+    async function checkBot() {
+      const c = getCfg();
+      if (!c.botUrl) return;
+      try {
+        const r = await fetchWithTimeout(`${c.botUrl}/ping`, {
+          method: 'GET',
+          redirect: 'follow',
+          timeout: 8000
+        });
+        if (r.ok || r.type === 'opaque') {
+          document.getElementById('bot-pulse').className = 'pulse on';
+          document.getElementById('bot-lbl').textContent = 'Bot Ativo';
+        } else throw new Error(`HTTP ${r.status}`);
+      } catch (e) {
+        document.getElementById('bot-pulse').className = 'pulse err';
+        document.getElementById('bot-lbl').textContent = 'Bot Offline';
+      }
+    }
+
     async function refreshStatus() {
       const c = getCfg(), sp = document.getElementById('st-sp'); sp.classList.add('on');
       try {
-        const r = await fetchWithTimeout(`${c.botUrl}/ping?secret=${encodeURIComponent(c.secret)}`, { timeout: 10000 }); const j = await r.json();
+        // ← refreshStatus também usa GET para /ping
+        const r = await fetchWithTimeout(`${c.botUrl}/ping`, {
+          method: 'GET',
+          redirect: 'follow',
+          timeout: 10000
+        });
+        const j = await r.json();
         document.getElementById('st-status').className = 'badge b-done'; document.getElementById('st-status').textContent = 'Online'; document.getElementById('st-hora').textContent = j.hora || '--:--';
         document.getElementById('sess-env').textContent = j.stats?.enviados || 0; document.getElementById('sess-err').textContent = j.stats?.erros || 0;
-        if (j.stats?.inicio) document.getElementById('sess-ini').textContent = new Date(j.stats.inicio).toLocaleTimeString('pt-BR'); addLog('Ping OK — Bot online.', 'ok');
-      } catch (e) { document.getElementById('st-status').className = 'badge b-no'; document.getElementById('st-status').textContent = 'Offline'; addLog(`Ping falhou: ${e.message}`, 'err'); } finally { sp.classList.remove('on') }
+        if (j.stats?.inicio) document.getElementById('sess-ini').textContent = new Date(j.stats.inicio).toLocaleTimeString('pt-BR');
+        addLog('Ping OK — Bot online.', 'ok');
+      } catch (e) {
+        document.getElementById('st-status').className = 'badge b-no';
+        document.getElementById('st-status').textContent = 'Offline';
+        addLog(`Ping falhou: ${e.message}`, 'err');
+      } finally { sp.classList.remove('on') }
     }
-    async function checkBot() { const c = getCfg(); if (!c.botUrl) return; try { await fetchWithTimeout(`${c.botUrl}/ping`, { timeout: 8000 }); document.getElementById('bot-pulse').className = 'pulse on'; document.getElementById('bot-lbl').textContent = 'Bot Ativo'; } catch (e) { document.getElementById('bot-pulse').className = 'pulse err'; document.getElementById('bot-lbl').textContent = 'Bot Offline'; } }
 
     window.onload = () => {
       initTheme();
       const saved = localStorage.getItem('acd_auth_v5');
       if (saved) { authTok = saved; boot(); return; }
-      // Primeiro acesso: sem config salva → mostra campos de setup
       const cfg = getCfg();
       if (!cfg.scriptUrl && !cfg.email) {
         document.getElementById('l-setup').style.display = 'block';
