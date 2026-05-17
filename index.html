@@ -413,6 +413,36 @@
       color: var(--red)
     }
 
+    /* ══ URGENTE badge & botão ═══════════════════════════════════════════════ */
+    .b-urg {
+      background: linear-gradient(135deg, rgba(232, 93, 38, .18), rgba(255, 80, 80, .14));
+      color: var(--accent);
+      border: 1px solid rgba(232, 93, 38, .35);
+      animation: urgPulse 2.2s ease-in-out infinite;
+    }
+
+    @keyframes urgPulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(232, 93, 38, .0)
+      }
+
+      50% {
+        box-shadow: 0 0 0 4px rgba(232, 93, 38, .18)
+      }
+    }
+
+    .ib-urg {
+      background: rgba(232, 93, 38, .12);
+      border-color: rgba(232, 93, 38, .4);
+      color: var(--accent);
+    }
+
+    .ib-urg:hover {
+      background: rgba(232, 93, 38, .22);
+    }
+
     /* ══ LAYOUT ══════════════════════════════════════════════════════════════ */
     #app {
       display: none;
@@ -1576,7 +1606,7 @@
         <div class="sb-mark">🛍</div>
         <div>
           <div class="sb-name">Achadinhos</div>
-          <div class="sb-ver">Admin v5.1</div>
+          <div class="sb-ver">Admin v5.5</div>
         </div>
       </div>
       <nav>
@@ -1633,6 +1663,7 @@
 
       <div class="content">
 
+        <!-- ══ DASHBOARD ══════════════════════════════════════════════════════ -->
         <div class="panel active" id="p-inicio">
           <div class="stats">
             <div class="stat c-or">
@@ -1671,12 +1702,13 @@
                       <th>Preço</th>
                       <th>Telegram</th>
                       <th>Site</th>
+                      <th>🔥</th>
                       <th>Ação</th>
                     </tr>
                   </thead>
                   <tbody id="home-tbl">
                     <tr>
-                      <td colspan="6">
+                      <td colspan="7">
                         <div class="empty">
                           <div class="eico">⏳</div>Carregando…
                         </div>
@@ -1721,6 +1753,7 @@
           </div>
         </div>
 
+        <!-- ══ INVENTÁRIO ═════════════════════════════════════════════════════ -->
         <div class="panel" id="p-produtos">
           <div class="sh">
             <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
@@ -1749,12 +1782,13 @@
                   <th>Categoria</th>
                   <th>Telegram</th>
                   <th>Site</th>
+                  <th>🔥</th>
                   <th>Ações</th>
                 </tr>
               </thead>
               <tbody id="prod-tbl">
                 <tr>
-                  <td colspan="7">
+                  <td colspan="8">
                     <div class="empty">
                       <div class="eico">⏳</div>Sincronizando…
                     </div>
@@ -1765,6 +1799,7 @@
           </div>
         </div>
 
+        <!-- ══ AUTOMAÇÃO ══════════════════════════════════════════════════════ -->
         <div class="panel" id="p-automacao">
           <div class="sh">
             <div>
@@ -1784,6 +1819,7 @@
           </div>
         </div>
 
+        <!-- ══ CANAL TELEGRAM ═════════════════════════════════════════════════ -->
         <div class="panel" id="p-historico">
           <div class="sh">
             <div>
@@ -1827,6 +1863,7 @@
           </div>
         </div>
 
+        <!-- ══ CONSOLE ════════════════════════════════════════════════════════ -->
         <div class="panel" id="p-atividade">
           <div style="display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start">
             <div>
@@ -1890,6 +1927,7 @@
           </div>
         </div>
 
+        <!-- ══ CONFIGURAÇÕES ══════════════════════════════════════════════════ -->
         <div class="panel" id="p-config">
           <div style="max-width:780px;display:flex;flex-direction:column;gap:24px">
             <div class="card">
@@ -1948,6 +1986,7 @@
     </div>
   </div>
 
+  <!-- ══ MODAL EDITAR PRODUTO ═══════════════════════════════════════════════ -->
   <div class="overlay" id="modal-edit">
     <div class="modal">
       <div class="mhead">
@@ -2008,6 +2047,7 @@
     </div>
   </div>
 
+  <!-- ══ MODAL CRON ═════════════════════════════════════════════════════════ -->
   <div class="overlay" id="modal-cron">
     <div class="modal" style="width: 540px">
       <div class="mhead">
@@ -2061,6 +2101,7 @@
     </div>
   </div>
 
+  <!-- ══ DRAWER DISPARO AVULSO ══════════════════════════════════════════════ -->
   <div class="drawer" id="drawer">
     <div class="dhead">
       <div class="dtitle">✈️ Disparo Avulso</div>
@@ -2303,31 +2344,114 @@
 
     // -- INVENTÁRIO & DASHBOARD --
     function renderHome() {
-      const tb = document.getElementById('home-tbl'), items = prods.filter(p => p.EnvTelegram === 'pendente').slice(0, 6);
-      if (!items.length) { tb.innerHTML = '<tr><td colspan="6"><div class="empty"><div class="eico">🎉</div>Nenhum pendente</div></td></tr>'; return }
-      tb.innerHTML = items.map(p => `<tr>
-    <td><img class="pimg" src="${esc(p.Imagem)}" onerror="this.style.display='none'"></td>
-    <td><div class="pname">${esc(p.Título)}</div><div class="pmeta">${p.Categoria || 'Geral'}</div></td>
-    <td><span class="price">${fp(p.Preço)}</span></td><td>${sb(p.EnvTelegram)}</td><td>${siteb(p.Status)}</td>
-    <td><button class="ib" title="Enviar agora" onclick="qSend('${p.ID}',this)">✈️</button></td>
-  </tr>`).join('');
+      const tb = document.getElementById('home-tbl'),
+        items = prods.filter(p => p.EnvTelegram === 'pendente').slice(0, 6);
+      if (!items.length) {
+        tb.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="eico">🎉</div>Nenhum pendente</div></td></tr>';
+        return;
+      }
+      tb.innerHTML = items.map(p => {
+        const isUrg = String(p.Urgente || '').toLowerCase() === 'sim';
+        return `<tr>
+          <td><img class="pimg" src="${esc(p.Imagem)}" onerror="this.style.display='none'"></td>
+          <td>
+            <div class="pname">${esc(p.Título)}</div>
+            <div class="pmeta">${p.Categoria || 'Geral'}</div>
+          </td>
+          <td><span class="price">${fp(p.Preço)}</span></td>
+          <td>${sb(p.EnvTelegram)}</td>
+          <td>${siteb(p.Status)}</td>
+          <td>
+            <button class="ib${isUrg ? ' ib-urg' : ''}"
+              title="${isUrg ? 'Desmarcar urgente' : 'Marcar urgente (estoque baixo)'}"
+              onclick="toggleUrgente('${p.ID}', this)">
+              ${isUrg ? '🔥' : '🌡️'}
+            </button>
+            ${isUrg ? '<span class="badge b-urg" style="font-size:9px;margin-left:4px">URGENTE</span>' : ''}
+          </td>
+          <td>
+            <button class="ib" title="Enviar agora" onclick="qSend('${p.ID}', this)">✈️</button>
+          </td>
+        </tr>`;
+      }).join('');
     }
 
     function renderProds(list) {
-      const tb = document.getElementById('prod-tbl'); document.getElementById('q-count').textContent = `${list.length} registros`;
-      if (!list.length) { tb.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="eico">📭</div>Nada encontrado.</div></td></tr>'; return }
-      tb.innerHTML = list.map(p => `<tr>
-    <td><img class="pimg" src="${esc(p.Imagem)}" onerror="this.style.display='none'"></td>
-    <td><div class="pname">${esc(p.Título)}</div><div class="pmeta">ID: ${esc(String(p.ID || '').substring(0, 8))}</div></td>
-    <td><span class="price">${fp(p.Preço)}</span></td><td>${esc(p.Categoria || '—')}</td>
-    <td>${sb(p.EnvTelegram)}</td><td>${siteb(p.Status)}</td>
-    <td><button class="ib" onclick="openEdit('${p.ID}')">✏️</button></td>
-  </tr>`).join('');
+      const tb = document.getElementById('prod-tbl');
+      document.getElementById('q-count').textContent = `${list.length} registros`;
+      if (!list.length) {
+        tb.innerHTML = '<tr><td colspan="8"><div class="empty"><div class="eico">📭</div>Nada encontrado.</div></td></tr>';
+        return;
+      }
+      tb.innerHTML = list.map(p => {
+        const isUrg = String(p.Urgente || '').toLowerCase() === 'sim';
+        return `<tr>
+          <td><img class="pimg" src="${esc(p.Imagem)}" onerror="this.style.display='none'"></td>
+          <td>
+            <div class="pname">${esc(p.Título)}</div>
+            <div class="pmeta">ID: ${esc(String(p.ID || '').substring(0, 8))}</div>
+          </td>
+          <td><span class="price">${fp(p.Preço)}</span></td>
+          <td>${esc(p.Categoria || '—')}</td>
+          <td>${sb(p.EnvTelegram)}</td>
+          <td>${siteb(p.Status)}</td>
+          <td>
+            <button class="ib${isUrg ? ' ib-urg' : ''}"
+              title="${isUrg ? 'Desmarcar urgente' : 'Marcar urgente'}"
+              onclick="toggleUrgente('${p.ID}', this)">
+              ${isUrg ? '🔥' : '🌡️'}
+            </button>
+          </td>
+          <td><button class="ib" onclick="openEdit('${p.ID}')">✏️</button></td>
+        </tr>`;
+      }).join('');
     }
 
     function filterTbl() {
       const q = document.getElementById('q-s').value.toLowerCase(), st = document.getElementById('q-st').value, siteSt = document.getElementById('q-site').value;
       renderProds(prods.filter(p => (p.Título || '').toLowerCase().includes(q) && (!st || p.EnvTelegram === st) && (!siteSt || (siteSt === 'feito' ? (p.Status === 'sim' || p.Status === 'feito') : (p.Status !== 'sim' && p.Status !== 'feito')))));
+    }
+
+    // -- TOGGLE URGENTE --
+    async function toggleUrgente(id, btnEl) {
+      const p = prods.find(x => x.ID === id);
+      if (!p) return;
+
+      const novoEstado = String(p.Urgente || '').toLowerCase() !== 'sim';
+      if (btnEl) btnEl.disabled = true;
+
+      try {
+        // 1. Persiste na planilha via Apps Script
+        await apiPost({
+          action: 'atualizar',
+          id,
+          campos: { Urgente: novoEstado ? 'sim' : 'nao' }
+        });
+
+        // 2. Avisa o Bot (tolerante a falha — só para logs em tempo real)
+        try {
+          await botFetch('/marcar-urgente', { id, urgente: novoEstado });
+        } catch (_) { /* bot pode estar offline; planilha já foi atualizada */ }
+
+        // 3. Atualiza estado local sem nova chamada de rede
+        p.Urgente = novoEstado ? 'sim' : 'nao';
+
+        toast(
+          novoEstado ? '🔥 Produto marcado como URGENTE — será priorizado na fila!' : '✅ Urgência removida do produto.',
+          novoEstado ? 'warn' : 'ok'
+        );
+        addLog(`Urgente=${novoEstado ? 'sim' : 'nao'} → produto ${id}`, novoEstado ? 'warn' : 'info');
+
+        // 4. Re-renderiza só a tabela ativa
+        const painelAtivo = document.querySelector('.panel.active');
+        if (painelAtivo?.id === 'p-produtos') filterTbl();
+        else renderHome();
+
+      } catch (e) {
+        toast('Erro ao atualizar urgência: ' + e.message, 'err');
+      } finally {
+        if (btnEl) btnEl.disabled = false;
+      }
     }
 
     // -- CRONS (AUTOMAÇÃO) --
@@ -2495,12 +2619,29 @@
 
     // -- AÇÕES DO BOT --
     async function qSend(id, btnEl) {
-      const p = prods.find(x => x.ID === id); if (!p) return;
-      if (btnEl) btnEl.disabled = true; toast('Enviando para o Telegram…', 'warn');
+      const p = prods.find(x => x.ID === id);
+      if (!p) return;
+      if (btnEl) btnEl.disabled = true;
+      toast('Enviando para o Telegram…', 'warn');
+
+      const isUrg = String(p.Urgente || '').toLowerCase() === 'sim';
+
       try {
-        const j = await botFetch('/enviar-oferta', { titulo: p.Título || '', link: p.Link || '', imagem: p.Imagem || '', preco: fp(p.Preço) || '', categoria: p.Categoria || '' });
-        if (j.status) { toast('Enviado com sucesso!'); await apiPost({ action: 'registrar_postagem', id_produto: p.ID, message_id: String(j.message_id || ''), status: 'sucesso' }); await loadAll(); }
-        else { toast('Falha no envio (Bot retornou false)', 'err'); }
+        const j = await botFetch('/enviar-oferta', {
+          titulo: p.Título || '',
+          link: p.Link || '',
+          imagem: p.Imagem || '',
+          preco: fp(p.Preço) || '',
+          categoria: p.Categoria || '',
+          urgente: isUrg
+        });
+        if (j.status) {
+          toast(isUrg ? '🔥 Oferta URGENTE enviada!' : 'Enviado com sucesso!');
+          await apiPost({ action: 'registrar_postagem', id_produto: p.ID, message_id: String(j.message_id || ''), status: 'sucesso' });
+          await loadAll();
+        } else {
+          toast('Falha no envio (Bot retornou false)', 'err');
+        }
       } catch (e) { toast(e.message, 'err'); } finally { if (btnEl) btnEl.disabled = false; }
     }
 
@@ -2592,19 +2733,13 @@
     async function testConn() {
       const c = getCfg(), sp = document.getElementById('test-sp'), res = document.getElementById('test-result');
       sp.classList.add('on'); res.style.display = 'none'; const results = [];
-      // Testa Apps Script
       try {
         const r = await fetchWithTimeout(`${c.scriptUrl}?key=${encodeURIComponent(authTok || c.pass)}&action=listar`);
         const j = await r.json();
         results.push(`<div style="color:var(--green)">✅ Apps Script: OK (${j.produtos?.length || 0} itens)</div>`);
       } catch (e) { results.push(`<div style="color:var(--red)">❌ Apps Script: ${e.message}</div>`) }
-      // ← Testa Bot via GET (método correto para /ping)
       try {
-        const r = await fetchWithTimeout(`${c.botUrl}/ping`, {
-          method: 'GET',
-          redirect: 'follow',
-          timeout: 8000
-        });
+        const r = await fetchWithTimeout(`${c.botUrl}/ping`, { method: 'GET', redirect: 'follow', timeout: 8000 });
         const j = await r.json();
         results.push(`<div style="color:var(--green)">✅ Bot Discloud: Online — ${j.hora || ''}</div>`);
       } catch (e) { results.push(`<div style="color:var(--red)">❌ Bot Discloud: ${e.message}</div>`) }
@@ -2622,16 +2757,11 @@
       try { const j = await botFetch('/enviar-oferta', { titulo, link, imagem, preco }); if (j.status) { toast('Avulso enviado!'); closeDrawer(); loadAll(); } } catch (e) { toast(e.message, 'err') } finally { btn.disabled = false; sp.classList.remove('on') }
     }
 
-    // ← checkBot corrigido: usa GET explícito, sem body, com redirect:follow
     async function checkBot() {
       const c = getCfg();
       if (!c.botUrl) return;
       try {
-        const r = await fetchWithTimeout(`${c.botUrl}/ping`, {
-          method: 'GET',
-          redirect: 'follow',
-          timeout: 8000
-        });
+        const r = await fetchWithTimeout(`${c.botUrl}/ping`, { method: 'GET', redirect: 'follow', timeout: 8000 });
         if (r.ok || r.type === 'opaque') {
           document.getElementById('bot-pulse').className = 'pulse on';
           document.getElementById('bot-lbl').textContent = 'Bot Ativo';
@@ -2645,12 +2775,7 @@
     async function refreshStatus() {
       const c = getCfg(), sp = document.getElementById('st-sp'); sp.classList.add('on');
       try {
-        // ← refreshStatus também usa GET para /ping
-        const r = await fetchWithTimeout(`${c.botUrl}/ping`, {
-          method: 'GET',
-          redirect: 'follow',
-          timeout: 10000
-        });
+        const r = await fetchWithTimeout(`${c.botUrl}/ping`, { method: 'GET', redirect: 'follow', timeout: 10000 });
         const j = await r.json();
         document.getElementById('st-status').className = 'badge b-done'; document.getElementById('st-status').textContent = 'Online'; document.getElementById('st-hora').textContent = j.hora || '--:--';
         document.getElementById('sess-env').textContent = j.stats?.enviados || 0; document.getElementById('sess-err').textContent = j.stats?.erros || 0;
