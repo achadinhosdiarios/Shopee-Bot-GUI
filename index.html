@@ -2217,7 +2217,7 @@
           method,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...params, secret: c.secret }),
-          timeout: 30000, 
+          timeout: 30000,
         });
         if (!r.ok) {
           let detail = `HTTP ${r.status}`;
@@ -2758,7 +2758,7 @@
       } catch (e) { results.push(`<div style="color:var(--red)">❌ Apps Script: ${e.message}</div>`) }
       try {
         const botBase = getCleanUrl(c.botUrl);
-        const r = await fetchWithTimeout(`${botBase}/ping`, { method: 'GET', redirect: 'follow', timeout: 10000 });
+        const r = await fetchWithTimeout(`${botBase}/ping`, { method: 'GET', redirect: 'follow', timeout: 30000 });
         const j = await r.json();
         results.push(`<div style="color:var(--green)">✅ Bot Discloud: Online — ${j.hora || ''}</div>`);
       } catch (e) { results.push(`<div style="color:var(--red)">❌ Bot Discloud: ${e.message}</div>`) }
