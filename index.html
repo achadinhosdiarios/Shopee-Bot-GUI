@@ -1606,7 +1606,7 @@
         <div class="sb-mark">🛍</div>
         <div>
           <div class="sb-name">Achadinhos</div>
-          <div class="sb-ver">Admin v5.6</div>
+          <div class="sb-ver">Admin v6.2</div>
         </div>
       </div>
       <nav>
@@ -2125,7 +2125,7 @@
 
   <script>
     const CK = 'acd_cfg_v5';
-    const DCFG = { scriptUrl: '', botUrl: '', email: '', pass: '', secret: '', grupo: '', site: '' };
+    const DCFG = { scriptUrl: '', botUrl: 'https://achadinhosbot.discloud.app', email: '', pass: '', secret: '', grupo: '', site: '' };
     const PANEL_META = {
       inicio: { title: 'Dashboard Analítico', icon: '🏠' },
       produtos: { title: 'Gestão de Inventário', icon: '📦' },
@@ -2147,7 +2147,30 @@
     function sCfg(c) { localStorage.setItem(CK, JSON.stringify(c)) }
 
     function getCleanUrl(url) {
-      return url ? url.trim().replace(/\/+$/, '') : '';
+      const raw = String(url || '').trim();
+      if (!raw) return '';
+      const withProtocol = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+      return withProtocol.replace(/\/+$/, '');
+    }
+
+    function sameOriginHint(url) {
+      try { return new URL(url).origin; } catch (_) { return url || 'URL inválida'; }
+    }
+
+    async function readMaybeJson(res) {
+      const txt = await res.text();
+      if (!txt) return {};
+      try { return JSON.parse(txt); }
+      catch (_) { return { raw: txt }; }
+    }
+
+    function networkErrorMessage(err, url = '') {
+      const msg = String(err?.message || err || '');
+      if (err?.name === 'AbortError' || msg.includes('aborted')) return 'Timeout: o servidor demorou para responder.';
+      if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+        return `Falha de rede/CORS ao acessar ${sameOriginHint(url)}. Verifique se o bot está online e se o backend está enviando Access-Control-Allow-Origin.`;
+      }
+      return msg;
     }
 
     function toast(msg, type = 'ok') {
@@ -2176,9 +2199,19 @@
       const { timeout = 20000, ...fetchOptions } = options;
       const ctrl = new AbortController();
       const id = setTimeout(() => ctrl.abort(), timeout);
-      const res = await fetch(resource, { redirect: 'follow', ...fetchOptions, signal: ctrl.signal });
-      clearTimeout(id);
-      return res;
+
+      try {
+        return await fetch(resource, {
+          redirect: 'follow',
+          cache: 'no-store',
+          ...fetchOptions,
+          signal: ctrl.signal
+        });
+      } catch (err) {
+        throw new Error(networkErrorMessage(err, String(resource)));
+      } finally {
+        clearTimeout(id);
+      }
     }
 
     // -- COMUNICAÇÃO API --
@@ -2188,8 +2221,10 @@
       const u = new URL(c.scriptUrl);
       u.searchParams.set('key', authTok || c.pass);
       Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
-      const r = await fetchWithTimeout(u.toString());
-      return r.json();
+      const r = await fetchWithTimeout(u.toString(), { method: 'GET' });
+      const j = await readMaybeJson(r);
+      if (!r.ok) throw new Error(j.mensagem || j.detail || `Apps Script HTTP ${r.status}`);
+      return j;
     }
 
     async function apiPost(body) {
@@ -2209,31 +2244,36 @@
     async function botFetch(ep, params = {}, method = 'POST') {
       const c = getCfg();
       if (!c.botUrl) throw new Error("A URL do Bot não está configurada na aba de Configurações.");
-      if (!c.botUrl.startsWith('http')) throw new Error("A URL do Bot deve começar com http:// ou https://");
 
       const base = getCleanUrl(c.botUrl);
+      const url = `${base}${ep}`;
+      const payload = { ...params, secret: c.secret };
+      const init = {
+        method,
+        mode: 'cors',
+        credentials: 'omit',
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 30000,
+      };
+
+      if (method !== 'GET') init.body = JSON.stringify(payload);
+
       try {
-        const r = await fetchWithTimeout(`${base}${ep}`, {
-          method,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...params, secret: c.secret }),
-          timeout: 30000,
-        });
+        const r = await fetchWithTimeout(url, init);
+        const data = await readMaybeJson(r);
+
         if (!r.ok) {
-          let detail = `HTTP ${r.status}`;
-          try {
-            const ed = await r.json();
-            detail = Array.isArray(ed.detail) ? ed.detail.map(e => `[${(e.loc || []).join('.')}] ${e.msg}`).join(' | ') : (ed.detail || detail);
-          } catch (e) { }
+          const detail = Array.isArray(data.detail)
+            ? data.detail.map(e => `[${(e.loc || []).join('.')}] ${e.msg}`).join(' | ')
+            : (data.detail || data.mensagem || data.raw || `HTTP ${r.status}`);
           throw new Error(detail);
         }
-        return await r.json();
+
+        return data;
       } catch (err) {
-        addLog(`Falha API Bot [${ep}]: ${err.message}`, 'err');
-        if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('signal is aborted')) {
-          throw new Error("Erro de conexão (Timeout ou Failed to fetch). O bot na Discloud pode estar offline, hibernando ou processando lentamente.");
-        }
-        throw err;
+        const friendly = networkErrorMessage(err, url);
+        addLog(`Falha API Bot [${ep}]: ${friendly}`, 'err');
+        throw new Error(friendly);
       }
     }
 
@@ -2246,7 +2286,7 @@
       const setupVisible = document.getElementById('l-setup').style.display !== 'none';
       if (setupVisible) {
         const scriptUrl = document.getElementById('l-script').value.trim();
-        const botUrl = document.getElementById('l-bot').value.trim().replace(/\/$/, '');
+        const botUrl = getCleanUrl(document.getElementById('l-bot').value);
         const secret = document.getElementById('l-secret').value;
         if (!scriptUrl || !em || !pw) {
           er.textContent = 'Preencha a URL do Apps Script, e-mail e senha.'; er.style.display = 'block';
@@ -2747,24 +2787,46 @@ function driveUrl(idOrUrl) {
 
     // -- CONFIGS & DRAWER MANUAL --
     function loadCfgUI() { const c = getCfg(); document.getElementById('c-sc').value = c.scriptUrl; document.getElementById('c-bot').value = c.botUrl; document.getElementById('c-em').value = c.email; document.getElementById('c-pw').value = c.pass; document.getElementById('c-sec').value = c.secret; document.getElementById('c-grp').value = c.grupo; document.getElementById('c-sit').value = c.site; }
-    function saveConf() { sCfg({ scriptUrl: document.getElementById('c-sc').value.trim(), botUrl: document.getElementById('c-bot').value.trim().replace(/\/$/, ''), email: document.getElementById('c-em').value.trim(), pass: document.getElementById('c-pw').value, secret: document.getElementById('c-sec').value, grupo: document.getElementById('c-grp').value.trim(), site: document.getElementById('c-sit').value.trim() }); toast('Configurações gravadas!'); }
+    function saveConf() { sCfg({ scriptUrl: document.getElementById('c-sc').value.trim(), botUrl: getCleanUrl(document.getElementById('c-bot').value), email: document.getElementById('c-em').value.trim(), pass: document.getElementById('c-pw').value, secret: document.getElementById('c-sec').value, grupo: document.getElementById('c-grp').value.trim(), site: document.getElementById('c-sit').value.trim() }); toast('Configurações gravadas!'); }
 
     async function testConn() {
       const c = getCfg(), sp = document.getElementById('test-sp'), res = document.getElementById('test-result');
-      sp.classList.add('on'); res.style.display = 'none'; const results = [];
+      sp.classList.add('on');
+      res.style.display = 'none';
+      const results = [];
+
       try {
-        const r = await fetchWithTimeout(`${c.scriptUrl}?key=${encodeURIComponent(authTok || c.pass)}&action=listar`);
-        const j = await r.json();
+        const r = await fetchWithTimeout(`${c.scriptUrl}?key=${encodeURIComponent(authTok || c.pass)}&action=listar`, { method: 'GET', timeout: 30000 });
+        const j = await readMaybeJson(r);
+        if (!r.ok || j.status === 'erro') throw new Error(j.mensagem || `HTTP ${r.status}`);
         results.push(`<div style="color:var(--green)">✅ Apps Script: OK (${j.produtos?.length || 0} itens)</div>`);
-      } catch (e) { results.push(`<div style="color:var(--red)">❌ Apps Script: ${e.message}</div>`) }
+      } catch (e) {
+        results.push(`<div style="color:var(--red)">❌ Apps Script: ${esc(e.message)}</div>`);
+      }
+
       try {
         const botBase = getCleanUrl(c.botUrl);
-        const r = await fetchWithTimeout(`${botBase}/ping`, { method: 'GET', redirect: 'follow', timeout: 30000 });
-        const j = await r.json();
-        results.push(`<div style="color:var(--green)">✅ Bot Discloud: Online — ${j.hora || ''}</div>`);
-      } catch (e) { results.push(`<div style="color:var(--red)">❌ Bot Discloud: ${e.message}</div>`) }
+        const url = `${botBase}/ping`;
+        const r = await fetchWithTimeout(url, { method: 'GET', mode: 'cors', credentials: 'omit', timeout: 30000 });
+        const j = await readMaybeJson(r);
+        if (!r.ok) throw new Error(j.detail || j.raw || `HTTP ${r.status}`);
+
+        const cfg = j.config || {};
+        const missing = [];
+        if (cfg.bot_loaded === false) missing.push('BOT_TOKEN');
+        if (cfg.group_id === false) missing.push('ID_DO_GRUPO');
+        if (cfg.apps_script_url === false) missing.push('APPS_SCRIPT_URL');
+        if (cfg.api_secret === false) missing.push('API_SECRET');
+
+        results.push(`<div style="color:var(--green)">✅ Bot Discloud: Online — ${esc(j.hora || '')}</div>`);
+        if (missing.length) results.push(`<div style="color:var(--yellow)">⚠️ Configuração incompleta: ${esc(missing.join(', '))}</div>`);
+      } catch (e) {
+        results.push(`<div style="color:var(--red)">❌ Bot Discloud: ${esc(e.message)}</div>`);
+      }
+
       res.innerHTML = `<div style="padding:18px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);display:flex;flex-direction:column;gap:10px;font-size:13px;font-weight:700">${results.join('')}</div>`;
-      sp.classList.remove('on'); res.style.display = 'block';
+      sp.classList.remove('on');
+      res.style.display = 'block';
     }
 
     function openDrawer() { document.getElementById('drawer').classList.add('open'); const sel = document.getElementById('d-sel'); sel.innerHTML = '<option value="">— Em Branco —</option>'; prods.slice(0, 25).forEach(p => sel.innerHTML += `<option value="${p.ID}">${esc((p.Título || '').substring(0, 32))}</option>`); }
@@ -2780,34 +2842,52 @@ function driveUrl(idOrUrl) {
     async function checkBot() {
       const c = getCfg();
       if (!c.botUrl) return;
+
       try {
         const botBase = getCleanUrl(c.botUrl);
-        const r = await fetchWithTimeout(`${botBase}/ping`, { method: 'GET', redirect: 'follow', timeout: 10000 });
-        if (r.ok || r.type === 'opaque') {
-          document.getElementById('bot-pulse').className = 'pulse on';
-          document.getElementById('bot-lbl').textContent = 'Bot Ativo';
-        } else throw new Error(`HTTP ${r.status}`);
+        const r = await fetchWithTimeout(`${botBase}/ping`, { method: 'GET', mode: 'cors', credentials: 'omit', timeout: 10000 });
+        const j = await readMaybeJson(r);
+        if (!r.ok) throw new Error(j.detail || `HTTP ${r.status}`);
+
+        document.getElementById('bot-pulse').className = 'pulse on';
+        document.getElementById('bot-lbl').textContent = 'Bot Ativo';
       } catch (e) {
         document.getElementById('bot-pulse').className = 'pulse err';
         document.getElementById('bot-lbl').textContent = 'Bot Offline';
+        addLog(`Ping falhou: ${e.message}`, 'err');
       }
     }
 
     async function refreshStatus() {
-      const c = getCfg(), sp = document.getElementById('st-sp'); sp.classList.add('on');
+      const c = getCfg(), sp = document.getElementById('st-sp');
+      sp.classList.add('on');
+
       try {
         const botBase = getCleanUrl(c.botUrl);
-        const r = await fetchWithTimeout(`${botBase}/ping`, { method: 'GET', redirect: 'follow', timeout: 10000 });
-        const j = await r.json();
-        document.getElementById('st-status').className = 'badge b-done'; document.getElementById('st-status').textContent = 'Online'; document.getElementById('st-hora').textContent = j.hora || '--:--';
-        document.getElementById('sess-env').textContent = j.stats?.enviados || 0; document.getElementById('sess-err').textContent = j.stats?.erros || 0;
+        const r = await fetchWithTimeout(`${botBase}/ping`, { method: 'GET', mode: 'cors', credentials: 'omit', timeout: 10000 });
+        const j = await readMaybeJson(r);
+        if (!r.ok) throw new Error(j.detail || `HTTP ${r.status}`);
+
+        document.getElementById('st-status').className = 'badge b-done';
+        document.getElementById('st-status').textContent = 'Online';
+        document.getElementById('st-hora').textContent = j.hora || '--:--';
+        document.getElementById('sess-env').textContent = j.stats?.enviados || 0;
+        document.getElementById('sess-err').textContent = j.stats?.erros || 0;
         if (j.stats?.inicio) document.getElementById('sess-ini').textContent = new Date(j.stats.inicio).toLocaleTimeString('pt-BR');
-        addLog('Ping OK — Bot online.', 'ok');
+
+        const cfg = j.config || {};
+        if (cfg.bot_loaded === false || cfg.group_id === false || cfg.api_secret === false) {
+          addLog(`Ping OK, mas há config incompleta: ${JSON.stringify(cfg)}`, 'warn');
+        } else {
+          addLog('Ping OK — Bot online.', 'ok');
+        }
       } catch (e) {
         document.getElementById('st-status').className = 'badge b-no';
         document.getElementById('st-status').textContent = 'Offline';
         addLog(`Ping falhou: ${e.message}`, 'err');
-      } finally { sp.classList.remove('on') }
+      } finally {
+        sp.classList.remove('on');
+      }
     }
 
     window.onload = () => {
