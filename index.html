@@ -2,20 +2,20 @@
 <html lang="pt-BR" data-theme="light">
 
 <head>
-   
+   
   <meta charset="UTF-8">
-   
+   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Achadinhos · Painel Admin</title>
-   
+    <title>Achadinhos · Painel Admin</title>
+   
   <link rel="preconnect" href="https://fonts.googleapis.com">
-   
+   
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-   
-  <link    
+   
+  <link    
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap"
-        rel="stylesheet">
-    <style>
+        rel="stylesheet">
+    <style>
     /* ══ TOKENS ══════════════════════════════════════════════════════════════ */
     :root {
       --bg: #f0f0ed;
@@ -1554,614 +1554,614 @@
 
 <body>
 
-    <div id="login-screen">
-        <div class="login-wrap">
-            <div class="login-logo">
-                <div class="login-logo-mark">🛍</div>
-                <div>
-                    <div class="login-logo-name">Achadinhos</div>
-                    <div class="login-logo-sub">Painel Admin</div>
-                  </div>
-              </div>
-            <div class="login-card">
-                <h2 id="l-title">Acessar painel</h2>
-                <p id="l-sub">Use suas credenciais de administrador.</p>
+    <div id="login-screen">
+        <div class="login-wrap">
+            <div class="login-logo">
+                <div class="login-logo-mark">🛍</div>
+                <div>
+                    <div class="login-logo-name">Achadinhos</div>
+                    <div class="login-logo-sub">Painel Admin</div>
+                  </div>
+              </div>
+            <div class="login-card">
+                <h2 id="l-title">Acessar painel</h2>
+                <p id="l-sub">Use suas credenciais de administrador.</p>
 
-                <div id="l-setup" style="display:none">
-                    <div            
+                <div id="l-setup" style="display:none">
+                    <div            
             style="background:var(--yellow-l);border:1.5px solid var(--yellow);border-radius:var(--r);padding:12px 14px;margin-bottom:18px;font-size:12px;font-weight:600;color:var(--yellow)">
-                        ⚙️ Primeira configuração — preencha os dados abaixo para continuar.
-                      </div>
-                    <div class="field">
-                        <label>Google Apps Script URL *</label>
-                        <input id="l-script" type="url" placeholder="https://script.google.com/macros/s/.../exec">
-                      </div>
-                    <div class="field">
-                        <label>Hostname FastAPI (Discloud) *</label>
-                        <input id="l-bot" type="url" placeholder="https://SEU-APP.discloud.app">
-                      </div>
-                    <div class="field">
-                        <label>API Secret Token *</label>
-                        <input id="l-secret" type="password" placeholder="Chave do bot…" autocomplete="off">
-                      </div>
-                    <div style="height:1px;background:var(--border);margin:18px 0"></div>
-                  </div>
+                        ⚙️ Primeira configuração — preencha os dados abaixo para continuar.
+                      </div>
+                    <div class="field">
+                        <label>Google Apps Script URL *</label>
+                        <input id="l-script" type="url" placeholder="https://script.google.com/macros/s/.../exec">
+                      </div>
+                    <div class="field">
+                        <label>Hostname FastAPI (Discloud) *</label>
+                        <input id="l-bot" type="url" placeholder="https://SEU-APP.discloud.app">
+                      </div>
+                    <div class="field">
+                        <label>API Secret Token *</label>
+                        <input id="l-secret" type="password" placeholder="Chave do bot…" autocomplete="off">
+                      </div>
+                    <div style="height:1px;background:var(--border);margin:18px 0"></div>
+                  </div>
 
-                <div class="field">
-                    <label>E-mail</label>
-                    <input id="l-email" type="email" placeholder="admin@email.com" autocomplete="username">
-                  </div>
-                <div class="field">
-                    <label>Senha</label>
-                    <input id="l-pass" type="password" placeholder="••••••••" autocomplete="current-password"          
-              onkeydown="if(event.key==='Enter')doLogin()">
-                  </div>
-                <button class="btn btn-primary btn-full" style="padding:14px;font-size:14px" id="btn-login"
+                <div class="field">
+                    <label>E-mail</label>
+                    <input id="l-email" type="email" placeholder="admin@email.com" autocomplete="username">
+                  </div>
+                <div class="field">
+                    <label>Senha</label>
+                    <input id="l-pass" type="password" placeholder="••••••••" autocomplete="current-password"          
+              onkeydown="if(event.key==='Enter')doLogin()">
+                  </div>
+                <button class="btn btn-primary btn-full" style="padding:14px;font-size:14px" id="btn-login"
           onclick="doLogin()">
-                    Entrar <div class="spin" id="l-spin"></div>
-                  </button>
-                <div class="login-err" id="l-err">Credenciais inválidas.</div>
-              </div>
-          </div>
-      </div>
+                    Entrar <div class="spin" id="l-spin"></div>
+                  </button>
+                <div class="login-err" id="l-err">Credenciais inválidas.</div>
+              </div>
+          </div>
+      </div>
 
-    <div id="app">
+    <div id="app">
 
-        <aside class="sidebar">
-            <div class="sb-brand">
-                <div class="sb-mark">🛍</div>
-                <div>
-                    <div class="sb-name">Achadinhos</div>
-                    <div class="sb-ver">Admin v5.6</div>
-                  </div>
-              </div>
-            <nav>
-                <div class="nav-section">Visão Geral</div>
-                <button class="nav-item active" data-panel="inicio" onclick="goTo('inicio')">
-                    <span class="ni">🏠</span><span>Dashboard</span>
-                  </button>
-                <button class="nav-item" data-panel="produtos" onclick="goTo('produtos')">
-                    <span class="ni">📦</span><span>Inventário</span>
-                    <span class="nbadge" id="nb-pend" style="display:none">0</span>
-                  </button>
+        <aside class="sidebar">
+            <div class="sb-brand">
+                <div class="sb-mark">🛍</div>
+                <div>
+                    <div class="sb-name">Achadinhos</div>
+                    <div class="sb-ver">Admin v5.6</div>
+                  </div>
+              </div>
+            <nav>
+                <div class="nav-section">Visão Geral</div>
+                <button class="nav-item active" data-panel="inicio" onclick="goTo('inicio')">
+                    <span class="ni">🏠</span><span>Dashboard</span>
+                  </button>
+                <button class="nav-item" data-panel="produtos" onclick="goTo('produtos')">
+                    <span class="ni">📦</span><span>Inventário</span>
+                    <span class="nbadge" id="nb-pend" style="display:none">0</span>
+                  </button>
 
-                <div class="nav-section">Automação & Redes</div>
-                <button class="nav-item" data-panel="automacao" onclick="goTo('automacao')">
-                    <span class="ni">⏰</span><span>Agendamentos</span>
-                  </button>
-                <button class="nav-item" data-panel="historico" onclick="goTo('historico')">
-                    <span class="ni">📱</span><span>Canal Telegram</span>
-                  </button>
+                <div class="nav-section">Automação & Redes</div>
+                <button class="nav-item" data-panel="automacao" onclick="goTo('automacao')">
+                    <span class="ni">⏰</span><span>Agendamentos</span>
+                  </button>
+                <button class="nav-item" data-panel="historico" onclick="goTo('historico')">
+                    <span class="ni">📱</span><span>Canal Telegram</span>
+                  </button>
 
-                <div class="nav-section">Sistema</div>
-                <button class="nav-item" data-panel="atividade" onclick="goTo('atividade')">
-                    <span class="ni">📋</span><span>Console & APIs</span>
-                  </button>
-                <button class="nav-item" data-panel="config" onclick="goTo('config')">
-                    <span class="ni">⚙️</span><span>Configurações</span>
-                  </button>
-              </nav>
-            <div class="sb-foot">
-                <div class="bot-status-card" onclick="checkBot()">
-                    <div class="pulse" id="bot-pulse"></div>
-                    <div>
-                        <div class="bot-lbl" id="bot-lbl">Verificando…</div>
-                        <div class="bot-sub">Discloud API</div>
-                      </div>
-                  </div>
-              </div>
-          </aside>
+                <div class="nav-section">Sistema</div>
+                <button class="nav-item" data-panel="atividade" onclick="goTo('atividade')">
+                    <span class="ni">📋</span><span>Console & APIs</span>
+                  </button>
+                <button class="nav-item" data-panel="config" onclick="goTo('config')">
+                    <span class="ni">⚙️</span><span>Configurações</span>
+                  </button>
+              </nav>
+            <div class="sb-foot">
+                <div class="bot-status-card" onclick="checkBot()">
+                    <div class="pulse" id="bot-pulse"></div>
+                    <div>
+                        <div class="bot-lbl" id="bot-lbl">Verificando…</div>
+                        <div class="bot-sub">Discloud API</div>
+                      </div>
+                  </div>
+              </div>
+          </aside>
 
-        <div class="main">
+        <div class="main">
 
-            <div class="topbar">
-                <div class="topbar-l">
-                    <span class="topbar-icon" id="p-icon">🏠</span>
-                    <span class="topbar-title" id="ptitle">Dashboard</span>
-                  </div>
-                <div class="topbar-r">
-                    <span class="sync-badge" id="last-sync">Aguardando…</span>
-                    <button class="btn btn-ghost btn-sm" onclick="toggleTheme()">🌓</button>
-                    <button class="btn btn-ghost btn-sm" onclick="loadAll()" id="btn-refresh">↺ Sincronizar</button>
-                    <button class="btn btn-danger btn-sm" onclick="doLogout()">Sair</button>
-                  </div>
-              </div>
+            <div class="topbar">
+                <div class="topbar-l">
+                    <span class="topbar-icon" id="p-icon">🏠</span>
+                    <span class="topbar-title" id="ptitle">Dashboard</span>
+                  </div>
+                <div class="topbar-r">
+                    <span class="sync-badge" id="last-sync">Aguardando…</span>
+                    <button class="btn btn-ghost btn-sm" onclick="toggleTheme()">🌓</button>
+                    <button class="btn btn-ghost btn-sm" onclick="loadAll()" id="btn-refresh">↺ Sincronizar</button>
+                    <button class="btn btn-danger btn-sm" onclick="doLogout()">Sair</button>
+                  </div>
+              </div>
 
-            <div class="content">
+            <div class="content">
 
-                <!-- ══ DASHBOARD ══════════════════════════════════════════════════════ -->
-                <div class="panel active" id="p-inicio">
-                    <div class="stats">
-                        <div class="stat c-or">
-                            <div class="stat-icon">📦</div>
-                            <div class="stat-n" id="s-tot">—</div>
-                            <div class="stat-l">Total de Produtos</div>
-                          </div>
-                        <div class="stat c-gr">
-                            <div class="stat-icon">✅</div>
-                            <div class="stat-n" id="s-fei">—</div>
-                            <div class="stat-l">Enviados (Telegram)</div>
-                          </div>
-                        <div class="stat c-bl">
-                            <div class="stat-icon">🌐</div>
-                            <div class="stat-n" id="s-site">—</div>
-                            <div class="stat-l">Visíveis (Site)</div>
-                          </div>
-                        <div class="stat c-ye">
-                            <div class="stat-icon">⏳</div>
-                            <div class="stat-n" id="s-pen">—</div>
-                            <div class="stat-l">Pendentes (Telegram)</div>
-                          </div>
-                      </div>
-                    <div style="display:grid;grid-template-columns:1fr 320px;gap:28px;align-items:start">
-                        <div>
-                            <div class="sh">
-                                <div class="st">Fila de Pendentes</div>
-                                <button class="btn btn-ghost btn-sm" onclick="goTo('produtos')">Ver inventário
+                <!-- ══ DASHBOARD ══════════════════════════════════════════════════════ -->
+                <div class="panel active" id="p-inicio">
+                    <div class="stats">
+                        <div class="stat c-or">
+                            <div class="stat-icon">📦</div>
+                            <div class="stat-n" id="s-tot">—</div>
+                            <div class="stat-l">Total de Produtos</div>
+                          </div>
+                        <div class="stat c-gr">
+                            <div class="stat-icon">✅</div>
+                            <div class="stat-n" id="s-fei">—</div>
+                            <div class="stat-l">Enviados (Telegram)</div>
+                          </div>
+                        <div class="stat c-bl">
+                            <div class="stat-icon">🌐</div>
+                            <div class="stat-n" id="s-site">—</div>
+                            <div class="stat-l">Visíveis (Site)</div>
+                          </div>
+                        <div class="stat c-ye">
+                            <div class="stat-icon">⏳</div>
+                            <div class="stat-n" id="s-pen">—</div>
+                            <div class="stat-l">Pendentes (Telegram)</div>
+                          </div>
+                      </div>
+                    <div style="display:grid;grid-template-columns:1fr 320px;gap:28px;align-items:start">
+                        <div>
+                            <div class="sh">
+                                <div class="st">Fila de Pendentes</div>
+                                <button class="btn btn-ghost btn-sm" onclick="goTo('produtos')">Ver inventário
                   →</button>
-                              </div>
-                            <div class="tbl">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th></th>
-                                            <th>Produto</th>
-                                            <th>Preço</th>
-                                            <th>Telegram</th>
-                                            <th>Site</th>
-                                            <th>🔥</th>
-                                            <th>Ação</th>
-                                          </tr>
-                                      </thead>
-                                    <tbody id="home-tbl">
-                                        <tr>
-                                            <td colspan="7">
-                                                <div class="empty">
-                                                    <div class="eico">⏳</div>Carregando…
-                                                  </div>
-                                              </td>
-                                          </tr>
-                                      </tbody>
-                                  </table>
-                              </div>
-                          </div>
-                        <div style="display:flex;flex-direction:column;gap:20px">
-                            <div class="card">
-                                <div class="card-head">
-                                    <div class="card-title">⏰ Triggers de Cron</div>
-                                    <button class="btn btn-ghost btn-xs" onclick="goTo('automacao')">Gerenciar
+                              </div>
+                            <div class="tbl">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Produto</th>
+                                            <th>Preço</th>
+                                            <th>Telegram</th>
+                                            <th>Site</th>
+                                            <th>🔥</th>
+                                            <th>Ação</th>
+                                          </tr>
+                                      </thead>
+                                    <tbody id="home-tbl">
+                                        <tr>
+                                            <td colspan="7">
+                                                <div class="empty">
+                                                    <div class="eico">⏳</div>Carregando…
+                                                  </div>
+                                              </td>
+                                          </tr>
+                                      </tbody>
+                                  </table>
+                              </div>
+                          </div>
+                        <div style="display:flex;flex-direction:column;gap:20px">
+                            <div class="card">
+                                <div class="card-head">
+                                    <div class="card-title">⏰ Triggers de Cron</div>
+                                    <button class="btn btn-ghost btn-xs" onclick="goTo('automacao')">Gerenciar
                     →</button>
-                                  </div>
-                                <div class="card-body" style="padding: 14px 20px">
-                                    <div class="slist" id="home-crons-list">
-                                        <div class="empty" style="padding: 10px">
-                                            <div class="eico" style="font-size:24px">⏳</div>Buscando...
-                                          </div>
-                                      </div>
-                                  </div>
-                              </div>
-                            <div class="card">
-                                <div class="card-head">
-                                    <div class="card-title">⚡ Ações Rápidas</div>
-                                  </div>
-                                <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
-                                    <button class="btn btn-green btn-full" onclick="enviarProximo()" id="btn-prox"
+                                  </div>
+                                <div class="card-body" style="padding: 14px 20px">
+                                    <div class="slist" id="home-crons-list">
+                                        <div class="empty" style="padding: 10px">
+                                            <div class="eico" style="font-size:24px">⏳</div>Buscando...
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                            <div class="card">
+                                <div class="card-head">
+                                    <div class="card-title">⚡ Ações Rápidas</div>
+                                  </div>
+                                <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+                                    <button class="btn btn-green btn-full" onclick="enviarProximo()" id="btn-prox"
                     style="padding:13px">
-                                        🚀 Disparar 1º da Fila <div class="spin" id="prox-sp"></div>
-                                      </button>
-                                    <!-- ✅ CORRIGIDO: agora dispara banner CRON, não produto da fila -->
-                                    <button class="btn btn-ghost btn-full" onclick="forcarCiclo()" id="btn-ciclo">
-                                        ⏰ Forçar Banner CRON <div class="spin dark" id="ciclo-sp"></div>
-                                      </button>
-                                    <div class="divider"></div>
-                                    <button class="btn btn-primary btn-full" onclick="openDrawer()">
-                                        ✈️ Disparo Avulso
-                                      </button>
-                                  </div>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
+                                        🚀 Disparar 1º da Fila <div class="spin" id="prox-sp"></div>
+                                      </button>
+                                    <!-- ✅ CORRIGIDO: agora dispara banner CRON, não produto da fila -->
+                                    <button class="btn btn-ghost btn-full" onclick="forcarCiclo()" id="btn-ciclo">
+                                        ⏰ Forçar Banner CRON <div class="spin dark" id="ciclo-sp"></div>
+                                      </button>
+                                    <div class="divider"></div>
+                                    <button class="btn btn-primary btn-full" onclick="openDrawer()">
+                                        ✈️ Disparo Avulso
+                                      </button>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
 
-                <!-- ══ INVENTÁRIO ═════════════════════════════════════════════════════ -->
-                <div class="panel" id="p-produtos">
-                    <div class="sh">
-                        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-                            <input id="q-s" placeholder="🔍 Buscar produto…" style="width:240px" oninput="filterTbl()">
-                            <select id="q-st" onchange="filterTbl()" style="width:180px">
-                                <option value="">Telegram: Todos</option>
-                                <option value="pendente">Telegram: Pendente</option>
-                                <option value="feito">Telegram: Enviado</option>
-                                <option value="pausado">Telegram: Pausado</option>
-                              </select>
-                            <select id="q-site" onchange="filterTbl()" style="width:180px">
-                                <option value="">Site: Todos</option>
-                                <option value="feito">Site: Disponíveis</option>
-                                <option value="pendente">Site: Ocultos</option>
-                              </select>
-                          </div>
-                        <span id="q-count" style="font-size:13px;font-weight:700;color:var(--text3)">0 registros</span>
-                      </div>
-                    <div class="tbl compact">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th></th>
-                                    <th>Produto</th>
-                                    <th>Preço</th>
-                                    <th>Categoria</th>
-                                    <th>Telegram</th>
-                                    <th>Site</th>
-                                    <th>🔥</th>
-                                    <th>Ações</th>
-                                  </tr>
-                              </thead>
-                            <tbody id="prod-tbl">
-                                <tr>
-                                    <td colspan="8">
-                                        <div class="empty">
-                                            <div class="eico">⏳</div>Sincronizando…
-                                          </div>
-                                      </td>
-                                  </tr>
-                              </tbody>
-                          </table>
-                      </div>
-                  </div>
+                <!-- ══ INVENTÁRIO ═════════════════════════════════════════════════════ -->
+                <div class="panel" id="p-produtos">
+                    <div class="sh">
+                        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+                            <input id="q-s" placeholder="🔍 Buscar produto…" style="width:240px" oninput="filterTbl()">
+                            <select id="q-st" onchange="filterTbl()" style="width:180px">
+                                <option value="">Telegram: Todos</option>
+                                <option value="pendente">Telegram: Pendente</option>
+                                <option value="feito">Telegram: Enviado</option>
+                                <option value="pausado">Telegram: Pausado</option>
+                              </select>
+                            <select id="q-site" onchange="filterTbl()" style="width:180px">
+                                <option value="">Site: Todos</option>
+                                <option value="feito">Site: Disponíveis</option>
+                                <option value="pendente">Site: Ocultos</option>
+                              </select>
+                          </div>
+                        <span id="q-count" style="font-size:13px;font-weight:700;color:var(--text3)">0 registros</span>
+                      </div>
+                    <div class="tbl compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Produto</th>
+                                    <th>Preço</th>
+                                    <th>Categoria</th>
+                                    <th>Telegram</th>
+                                    <th>Site</th>
+                                    <th>🔥</th>
+                                    <th>Ações</th>
+                                  </tr>
+                              </thead>
+                            <tbody id="prod-tbl">
+                                <tr>
+                                    <td colspan="8">
+                                        <div class="empty">
+                                            <div class="eico">⏳</div>Sincronizando…
+                                          </div>
+                                      </td>
+                                  </tr>
+                              </tbody>
+                          </table>
+                      </div>
+                  </div>
 
-                <!-- ══ AUTOMAÇÃO ══════════════════════════════════════════════════════ -->
-                <div class="panel" id="p-automacao">
-                    <div class="sh">
-                        <div>
-                            <div class="st">⏰ Agendamentos (CRON)</div>
-                            <div style="font-size:12px;color:var(--text3);margin-top:4px;font-weight:600">
-                                Gerencie os horários automáticos e templates específicos do Bot.
-                              </div>
-                          </div>
-                        <button class="btn btn-primary" onclick="openCronModal()">+ Novo Agendamento</button>
-                      </div>
-                    <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(340px, 1fr));gap:18px"
+                <!-- ══ AUTOMAÇÃO ══════════════════════════════════════════════════════ -->
+                <div class="panel" id="p-automacao">
+                    <div class="sh">
+                        <div>
+                            <div class="st">⏰ Agendamentos (CRON)</div>
+                            <div style="font-size:12px;color:var(--text3);margin-top:4px;font-weight:600">
+                                Gerencie os horários automáticos e templates específicos do Bot.
+                              </div>
+                          </div>
+                        <button class="btn btn-primary" onclick="openCronModal()">+ Novo Agendamento</button>
+                      </div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(340px, 1fr));gap:18px"
             id="cron-grid">
-                        <div style="grid-column:1/-1">
-                            <div class="empty">
-                                <div class="eico">⏳</div>Carregando agendamentos…
-                              </div>
-                          </div>
-                      </div>
-                  </div>
+                        <div style="grid-column:1/-1">
+                            <div class="empty">
+                                <div class="eico">⏳</div>Carregando agendamentos…
+                              </div>
+                          </div>
+                      </div>
+                  </div>
 
-                <!-- ══ CANAL TELEGRAM ═════════════════════════════════════════════════ -->
-                <div class="panel" id="p-historico">
-                    <div class="sh">
-                        <div>
-                            <div class="st">📱 Canal Telegram</div>
-                            <div style="font-size:12px;color:var(--text3);margin-top:4px;font-weight:600">Histórico de
+                <!-- ══ CANAL TELEGRAM ═════════════════════════════════════════════════ -->
+                <div class="panel" id="p-historico">
+                    <div class="sh">
+                        <div>
+                            <div class="st">📱 Canal Telegram</div>
+                            <div style="font-size:12px;color:var(--text3);margin-top:4px;font-weight:600">Histórico de
                 disparos na
-                                planilha.</div>
-                          </div>
-                        <div style="display:flex;gap:10px;align-items:center">
-                            <input id="h-s" placeholder="🔍 Filtrar…" style="width:220px" oninput="filterHistorico()">
-                            <button class="btn btn-ghost btn-sm" onclick="loadHistorico()">↺ Recarregar</button>
-                          </div>
-                      </div>
-                    <div class="hist-stats-bar">
-                        <div class="hist-stat">
-                            <div class="hist-stat-n" id="h-tot" style="color:var(--green)">—</div>
-                            <div class="hist-stat-l">Total Disparos</div>
-                          </div>
-                        <div class="hist-stat">
-                            <div class="hist-stat-n" id="h-suc" style="color:var(--blue)">—</div>
-                            <div class="hist-stat-l">Sucesso</div>
-                          </div>
-                        <div class="hist-stat">
-                            <div class="hist-stat-n" id="h-err" style="color:var(--red)">—</div>
-                            <div class="hist-stat-l">Falhas</div>
-                          </div>
-                      </div>
-                    <div class="card" style="margin-bottom:20px;border-color:var(--blue-l)">
-                        <div class="card-body" style="display:flex;align-items:flex-start;gap:14px;padding:16px 20px">
-                            <div style="font-size:22px">💡</div>
-                            <p style="font-size:13px;color:var(--text2);line-height:1.6">Para Editar ou Apagar, o Bot
-                precisa do <code                  
+                                planilha.</div>
+                          </div>
+                        <div style="display:flex;gap:10px;align-items:center">
+                            <input id="h-s" placeholder="🔍 Filtrar…" style="width:220px" oninput="filterHistorico()">
+                            <button class="btn btn-ghost btn-sm" onclick="loadHistorico()">↺ Recarregar</button>
+                          </div>
+                      </div>
+                    <div class="hist-stats-bar">
+                        <div class="hist-stat">
+                            <div class="hist-stat-n" id="h-tot" style="color:var(--green)">—</div>
+                            <div class="hist-stat-l">Total Disparos</div>
+                          </div>
+                        <div class="hist-stat">
+                            <div class="hist-stat-n" id="h-suc" style="color:var(--blue)">—</div>
+                            <div class="hist-stat-l">Sucesso</div>
+                          </div>
+                        <div class="hist-stat">
+                            <div class="hist-stat-n" id="h-err" style="color:var(--red)">—</div>
+                            <div class="hist-stat-l">Falhas</div>
+                          </div>
+                      </div>
+                    <div class="card" style="margin-bottom:20px;border-color:var(--blue-l)">
+                        <div class="card-body" style="display:flex;align-items:flex-start;gap:14px;padding:16px 20px">
+                            <div style="font-size:22px">💡</div>
+                            <p style="font-size:13px;color:var(--text2);line-height:1.6">Para Editar ou Apagar, o Bot
+                precisa do <code                  
                   style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-family:var(--mono);color:var(--blue);font-size:11px">message_id</code>
-                                salvo no histórico. O botão de Reenviar cria uma nova postagem ignorando o id.</p>
-                          </div>
-                      </div>
-                    <div class="hist-grid" id="hist-grid">
-                        <div style="grid-column:1/-1">
-                            <div class="empty">
-                                <div class="eico">⏳</div>Buscando histórico…
-                              </div>
-                          </div>
-                      </div>
-                  </div>
+                                salvo no histórico. O botão de Reenviar cria uma nova postagem ignorando o id.</p>
+                          </div>
+                      </div>
+                    <div class="hist-grid" id="hist-grid">
+                        <div style="grid-column:1/-1">
+                            <div class="empty">
+                                <div class="eico">⏳</div>Buscando histórico…
+                              </div>
+                          </div>
+                      </div>
+                  </div>
 
-                <!-- ══ CONSOLE ════════════════════════════════════════════════════════ -->
-                <div class="panel" id="p-atividade">
-                    <div style="display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start">
-                        <div>
-                            <div class="sh">
-                                <div class="st">Terminal do Sistema</div>
-                                <button class="btn btn-ghost btn-sm" onclick="clearLog()">🗑 Limpar</button>
-                              </div>
-                            <div class="log-wrap">
-                                <div class="log-head">
-                                    <span class="log-title">root@achadinhos:~$ tail -f /var/log/bot.log</span>
-                                    <span style="font-family:var(--mono);font-size:11px;color:#4a5568" id="log-count">0
+                <!-- ══ CONSOLE ════════════════════════════════════════════════════════ -->
+                <div class="panel" id="p-atividade">
+                    <div style="display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start">
+                        <div>
+                            <div class="sh">
+                                <div class="st">Terminal do Sistema</div>
+                                <button class="btn btn-ghost btn-sm" onclick="clearLog()">🗑 Limpar</button>
+                              </div>
+                            <div class="log-wrap">
+                                <div class="log-head">
+                                    <span class="log-title">root@achadinhos:~$ tail -f /var/log/bot.log</span>
+                                    <span style="font-family:var(--mono);font-size:11px;color:#4a5568" id="log-count">0
                     linhas</span>
-                                  </div>
-                                <div class="log-body" id="log-body">
-                                    <div class="log-line"><span class="log-time">--:--:--</span><span
+                                  </div>
+                                <div class="log-body" id="log-body">
+                                    <div class="log-line"><span class="log-time">--:--:--</span><span
                       class="log-msg">Aguardando
-                                            I/O…</span></div>
-                                  </div>
-                              </div>
-                          </div>
-                        <div style="display:flex;flex-direction:column;gap:20px">
-                            <div class="card">
-                                <div class="card-head">
-                                    <div class="card-title">📊 Sessão do Bot</div>
-                                  </div>
-                                <div class="card-body" style="display:flex;flex-direction:column;gap:12px">
-                                    <div class="flex-between" style="font-size:13px">
-                                        <span style="color:var(--text2);font-weight:700">Posts Enviados</span>
-                                        <span class="badge b-done" id="sess-env">0</span>
-                                      </div>
-                                    <div class="flex-between" style="font-size:13px">
-                                        <span style="color:var(--text2);font-weight:700">Falhas de API</span>
-                                        <span class="badge b-no" id="sess-err">0</span>
-                                      </div>
-                                    <div class="flex-between" style="font-size:13px">
-                                        <span style="color:var(--text2);font-weight:700">Online desde</span>
-                                        <span
-                      style="font-family:var(--mono);font-size:12px;color:var(--text3);font-weight:700"                
-                            id="sess-ini">—</span>
-                                      </div>
-                                  </div>
-                              </div>
-                            <div class="card">
-                                <div class="card-head">
-                                    <div class="card-title">📡 Diagnóstico Discloud</div>
-                                  </div>
-                                <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
-                                    <div class="flex-between" style="font-size:13px">
-                                        <span style="color:var(--text2);font-weight:700">Status</span>
-                                        <span id="st-status" class="badge b-pend">—</span>
-                                      </div>
-                                    <div class="flex-between" style="font-size:13px">
-                                        <span style="color:var(--text2);font-weight:700">Relógio Interno</span>
-                                        <span
-                      style="font-family:var(--mono);font-weight:700;color:var(--text);font-size:12px"                  
-                          id="st-hora">—</span>
-                                      </div>
-                                    <div class="divider"></div>
-                                    <button class="btn btn-ghost btn-full" style="margin-top:6px"
+                                            I/O…</span></div>
+                                  </div>
+                              </div>
+                          </div>
+                        <div style="display:flex;flex-direction:column;gap:20px">
+                            <div class="card">
+                                <div class="card-head">
+                                    <div class="card-title">📊 Sessão do Bot</div>
+                                  </div>
+                                <div class="card-body" style="display:flex;flex-direction:column;gap:12px">
+                                    <div class="flex-between" style="font-size:13px">
+                                        <span style="color:var(--text2);font-weight:700">Posts Enviados</span>
+                                        <span class="badge b-done" id="sess-env">0</span>
+                                      </div>
+                                    <div class="flex-between" style="font-size:13px">
+                                        <span style="color:var(--text2);font-weight:700">Falhas de API</span>
+                                        <span class="badge b-no" id="sess-err">0</span>
+                                      </div>
+                                    <div class="flex-between" style="font-size:13px">
+                                        <span style="color:var(--text2);font-weight:700">Online desde</span>
+                                        <span
+                      style="font-family:var(--mono);font-size:12px;color:var(--text3);font-weight:700"                
+                            id="sess-ini">—</span>
+                                      </div>
+                                  </div>
+                              </div>
+                            <div class="card">
+                                <div class="card-head">
+                                    <div class="card-title">📡 Diagnóstico Discloud</div>
+                                  </div>
+                                <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+                                    <div class="flex-between" style="font-size:13px">
+                                        <span style="color:var(--text2);font-weight:700">Status</span>
+                                        <span id="st-status" class="badge b-pend">—</span>
+                                      </div>
+                                    <div class="flex-between" style="font-size:13px">
+                                        <span style="color:var(--text2);font-weight:700">Relógio Interno</span>
+                                        <span
+                      style="font-family:var(--mono);font-weight:700;color:var(--text);font-size:12px"                  
+                          id="st-hora">—</span>
+                                      </div>
+                                    <div class="divider"></div>
+                                    <button class="btn btn-ghost btn-full" style="margin-top:6px"
                     onclick="refreshStatus()" id="btn-ping">
-                                        ↻ Executar Ping <div class="spin dark" id="st-sp"></div>
-                                      </button>
-                                  </div>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
+                                        ↻ Executar Ping <div class="spin dark" id="st-sp"></div>
+                                      </button>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
 
-                <!-- ══ CONFIGURAÇÕES ══════════════════════════════════════════════════ -->
-                <div class="panel" id="p-config">
-                    <div style="max-width:780px;display:flex;flex-direction:column;gap:24px">
-                        <div class="card">
-                            <div class="card-head">
-                                <div class="card-title">🌐 Endpoints & Conexões</div>
-                              </div>
-                            <div class="card-body fg">
-                                <div class="fg2 full">
-                                    <label>Google Apps Script URL *</label>
-                                    <input id="c-sc" type="url"
+                <!-- ══ CONFIGURAÇÕES ══════════════════════════════════════════════════ -->
+                <div class="panel" id="p-config">
+                    <div style="max-width:780px;display:flex;flex-direction:column;gap:24px">
+                        <div class="card">
+                            <div class="card-head">
+                                <div class="card-title">🌐 Endpoints & Conexões</div>
+                              </div>
+                            <div class="card-body fg">
+                                <div class="fg2 full">
+                                    <label>Google Apps Script URL *</label>
+                                    <input id="c-sc" type="url"
                     placeholder="https://script.google.com/macros/s/.../exec">
-                                    <div class="hint">Responsável pelo CRUD na planilha.</div>
-                                  </div>
-                                <div class="fg2 full">
-                                    <label>Hostname FastAPI (Discloud) *</label>
-                                    <input id="c-bot" type="url" placeholder="https://SEU-APP.discloud.app">
-                                    <div class="hint" style="color:var(--red)">Atenção: A URL deve começar
+                                    <div class="hint">Responsável pelo CRUD na planilha.</div>
+                                  </div>
+                                <div class="fg2 full">
+                                    <label>Hostname FastAPI (Discloud) *</label>
+                                    <input id="c-bot" type="url" placeholder="https://SEU-APP.discloud.app">
+                                    <div class="hint" style="color:var(--red)">Atenção: A URL deve começar
                     obrigatoriamente com
-                                        <b>https://</b>
-                                      </div>
-                                  </div>
-                              </div>
-                          </div>
-                        <div class="card">
-                            <div class="card-head">
-                                <div class="card-title">🔐 Segurança</div>
-                              </div>
-                            <div class="card-body fg">
-                                <div class="fg2"><label>E-mail Root</label><input id="c-em" type="email"
+                                        <b>https://</b>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                        <div class="card">
+                            <div class="card-head">
+                                <div class="card-title">🔐 Segurança</div>
+                              </div>
+                            <div class="card-body fg">
+                                <div class="fg2"><label>E-mail Root</label><input id="c-em" type="email"
                     autocomplete="off"></div>
-                                <div class="fg2"><label>Senha Root</label><input id="c-pw" type="password"
+                                <div class="fg2"><label>Senha Root</label><input id="c-pw" type="password"
                     autocomplete="off"></div>
-                                <div class="fg2 full">
-                                    <label>API Secret Token</label>
-                                    <input id="c-sec" type="password" placeholder="Chave mestra de segurança…"
+                                <div class="fg2 full">
+                                    <label>API Secret Token</label>
+                                    <input id="c-sec" type="password" placeholder="Chave mestra de segurança…"
                     autocomplete="off">
-                                  </div>
-                              </div>
-                          </div>
-                        <div class="card">
-                            <div class="card-head">
-                                <div class="card-title">📢 Redes & Frontend</div>
-                              </div>
-                            <div class="card-body fg">
-                                <div class="fg2"><label>Telegram Group Link</label><input id="c-grp"
+                                  </div>
+                              </div>
+                          </div>
+                        <div class="card">
+                            <div class="card-head">
+                                <div class="card-title">📢 Redes & Frontend</div>
+                              </div>
+                            <div class="card-body fg">
+                                <div class="fg2"><label>Telegram Group Link</label><input id="c-grp"
                     placeholder="https://t.me/…"></div>
-                                <div class="fg2"><label>Website / Catálogo</label><input id="c-sit"
+                                <div class="fg2"><label>Website / Catálogo</label><input id="c-sit"
                     placeholder="https://…"></div>
-                              </div>
-                          </div>
-                        <div              
+                              </div>
+                          </div>
+                        <div              
               style="display:flex;gap:12px;flex-wrap:wrap;background:var(--surface);padding:20px;border-radius:var(--r-lg);border:1.5px solid var(--border);box-shadow:var(--sh)">
-                            <button class="btn btn-primary" onclick="saveConf()">💾 Gravar Configurações</button>
-                            <button class="btn btn-ghost" onclick="testConn()">
-                                🔌 Testar Conexão <div class="spin dark" id="test-sp"></div>
-                              </button>
-                          </div>
-                        <div id="test-result" style="display:none;animation:panelIn .3s ease"></div>
-                      </div>
-                  </div>
+                            <button class="btn btn-primary" onclick="saveConf()">💾 Gravar Configurações</button>
+                            <button class="btn btn-ghost" onclick="testConn()">
+                                🔌 Testar Conexão <div class="spin dark" id="test-sp"></div>
+                              </button>
+                          </div>
+                        <div id="test-result" style="display:none;animation:panelIn .3s ease"></div>
+                      </div>
+                  </div>
 
-              </div>
-          </div>
-      </div>
+              </div>
+          </div>
+      </div>
 
-    <!-- ══ MODAL EDITAR PRODUTO ═══════════════════════════════════════════════ -->
-    <div class="overlay" id="modal-edit">
-        <div class="modal">
-            <div class="mhead">
-                <div class="mtitle">Editar Produto</div>
-                <button class="mclose" onclick="closeModal()">✕</button>
-              </div>
-            <input type="hidden" id="e-id">
-            <div class="fg">
-                <div class="fg2">
-                    <label>Status Telegram</label>
-                    <select id="e-st">
-                        <option value="pendente">⏳ Pendente</option>
-                        <option value="feito">✅ Enviado</option>
-                        <option value="pausado">⏸ Pausado</option>
-                      </select>
-                  </div>
-                <div class="fg2">
-                    <label>Status Site</label>
-                    <select id="e-site">
-                        <option value="feito">🌐 Disponível</option>
-                        <option value="pendente">👻 Oculto</option>
-                      </select>
-                  </div>
-                <div class="fg2">
-                    <label>Prioridade</label>
-                    <select id="e-pr">
-                        <option value="alta">🔥 Alta</option>
-                        <option value="média">⭐ Média</option>
-                        <option value="baixa">⬇️ Baixa</option>
-                      </select>
-                  </div>
-                <div class="fg2">
-                    <label>Categoria</label>
-                    <select id="e-cat">
-                        <option value="">Sem Categoria</option>
-                        <option>Eletrônicos</option>
-                        <option>Casa</option>
-                        <option>Moda</option>
-                        <option>Beleza</option>
-                        <option>Esportes</option>
-                        <option>Games</option>
-                        <option>Bebê</option>
-                        <option>Outros</option>
-                      </select>
-                  </div>
-                <div class="fg2 full">
-                    <label>Notas Internas</label>
-                    <textarea id="e-com" rows="2" placeholder="Opcional…"></textarea>
-                  </div>
-              </div>
-            <div        
+    <!-- ══ MODAL EDITAR PRODUTO ═══════════════════════════════════════════════ -->
+    <div class="overlay" id="modal-edit">
+        <div class="modal">
+            <div class="mhead">
+                <div class="mtitle">Editar Produto</div>
+                <button class="mclose" onclick="closeModal()">✕</button>
+              </div>
+            <input type="hidden" id="e-id">
+            <div class="fg">
+                <div class="fg2">
+                    <label>Status Telegram</label>
+                    <select id="e-st">
+                        <option value="pendente">⏳ Pendente</option>
+                        <option value="feito">✅ Enviado</option>
+                        <option value="pausado">⏸ Pausado</option>
+                      </select>
+                  </div>
+                <div class="fg2">
+                    <label>Status Site</label>
+                    <select id="e-site">
+                        <option value="feito">🌐 Disponível</option>
+                        <option value="pendente">👻 Oculto</option>
+                      </select>
+                  </div>
+                <div class="fg2">
+                    <label>Prioridade</label>
+                    <select id="e-pr">
+                        <option value="alta">🔥 Alta</option>
+                        <option value="média">⭐ Média</option>
+                        <option value="baixa">⬇️ Baixa</option>
+                      </select>
+                  </div>
+                <div class="fg2">
+                    <label>Categoria</label>
+                    <select id="e-cat">
+                        <option value="">Sem Categoria</option>
+                        <option>Eletrônicos</option>
+                        <option>Casa</option>
+                        <option>Moda</option>
+                        <option>Beleza</option>
+                        <option>Esportes</option>
+                        <option>Games</option>
+                        <option>Bebê</option>
+                        <option>Outros</option>
+                      </select>
+                  </div>
+                <div class="fg2 full">
+                    <label>Notas Internas</label>
+                    <textarea id="e-com" rows="2" placeholder="Opcional…"></textarea>
+                  </div>
+              </div>
+            <div        
         style="margin-top:28px;display:flex;gap:12px;justify-content:flex-end;border-top:1px solid var(--border);padding-top:20px">
-                <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-                <button class="btn btn-primary" onclick="saveEdit()" id="btn-save-edit">
-                    Salvar Alterações <div class="spin" id="save-sp"></div>
-                  </button>
-              </div>
-          </div>
-      </div>
+                <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveEdit()" id="btn-save-edit">
+                    Salvar Alterações <div class="spin" id="save-sp"></div>
+                  </button>
+              </div>
+          </div>
+      </div>
 
-    <!-- ══ MODAL CRON ═════════════════════════════════════════════════════════ -->
-    <div class="overlay" id="modal-cron">
-        <div class="modal" style="width: 540px">
-            <div class="mhead">
-                <div class="mtitle" id="mcron-title">Novo Agendamento</div>
-                <button class="mclose" onclick="closeCronModal()">✕</button>
-              </div>
-            <input type="hidden" id="c-id">
-            <div class="fg2">
-                <label>Horário de Execução</label>
-                <input type="time" id="c-horario" class="time-input" style="width: 100%; font-size:16px; padding: 12px">
-              </div>
-            <div class="fg2" style="margin-top: 14px">
-                <label>Status do Cron</label>
-                <select id="c-ativo">
-                    <option value="sim">✅ Ativo (Rodando no Bot)</option>
-                    <option value="nao">⏸ Pausado</option>
-                  </select>
-              </div>
-            <div class="fg2" style="margin-top: 14px">
-                <label>🖼️ Imagem Fixa do Cron (opcional)</label>
-                <div style="position:relative">
-                    <input type="text" id="c-img" placeholder="Cole o ID do arquivo do Google Drive (ex: 1aBcD2eFgH…)"  
-                      oninput="previewCronImg(this.value)" style="padding-right:110px">
-                    <span            
+    <!-- ══ MODAL CRON ═════════════════════════════════════════════════════════ -->
+    <div class="overlay" id="modal-cron">
+        <div class="modal" style="width: 540px">
+            <div class="mhead">
+                <div class="mtitle" id="mcron-title">Novo Agendamento</div>
+                <button class="mclose" onclick="closeCronModal()">✕</button>
+              </div>
+            <input type="hidden" id="c-id">
+            <div class="fg2">
+                <label>Horário de Execução</label>
+                <input type="time" id="c-horario" class="time-input" style="width: 100%; font-size:16px; padding: 12px">
+              </div>
+            <div class="fg2" style="margin-top: 14px">
+                <label>Status do Cron</label>
+                <select id="c-ativo">
+                    <option value="sim">✅ Ativo (Rodando no Bot)</option>
+                    <option value="nao">⏸ Pausado</option>
+                  </select>
+              </div>
+            <div class="fg2" style="margin-top: 14px">
+                <label>🖼️ Imagem Fixa do Cron (opcional)</label>
+                <div style="position:relative">
+                    <input type="text" id="c-img" placeholder="Cole o ID do arquivo do Google Drive (ex: 1aBcD2eFgH…)"  
+                      oninput="previewCronImg(this.value)" style="padding-right:110px">
+                    <span            
             style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:var(--text3);font-family:var(--mono);pointer-events:none">drive.google.com</span>
-                  </div>
-                <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5">
-                    Abra o arquivo no Google Drive → <strong>Compartilhar → Qualquer pessoa com o link</strong> → copie
+                  </div>
+                <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5">
+                    Abra o arquivo no Google Drive → <strong>Compartilhar → Qualquer pessoa com o link</strong> → copie
           só o ID da
-                    URL:<br>
-                    <code            
+                    URL:<br>
+                    <code            
             style="font-family:var(--mono);font-size:10px;background:var(--surface3);padding:2px 6px;border-radius:4px">drive.google.com/file/d/<strong style="color:var(--accent)">SEU_ID_AQUI</strong>/view</code>
-                  </div>
-                <div id="c-img-preview"          
+                  </div>
+                <div id="c-img-preview"          
           style="display:none;margin-top:10px;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--border);max-height:140px">
-                    <img id="c-img-preview-el" src="" alt="preview"            
+                    <img id="c-img-preview-el" src="" alt="preview"            
             style="width:100%;height:140px;object-fit:cover;display:block">
-                  </div>
-              </div>
-            <div class="fg2" style="margin-top: 14px">
-                <label>Template da Mensagem (Deixe vazio para usar o Base)</label>
-                <textarea id="c-tmpl" class="tmpl-textarea"          
+                  </div>
+              </div>
+            <div class="fg2" style="margin-top: 14px">
+                <label>Template da Mensagem (Deixe vazio para usar o Base)</label>
+                <textarea id="c-tmpl" class="tmpl-textarea"          
           placeholder="Ex: 🛍 *OFERTA EXCLUSIVA DAS 18H!*\n\n[titulo] por apenas [preco]!"></textarea>
-              </div>
-            <div        
+              </div>
+            <div        
         style="margin-top:28px;display:flex;gap:12px;justify-content:flex-end;border-top:1px solid var(--border);padding-top:20px">
-                <button class="btn btn-ghost" onclick="closeCronModal()">Cancelar</button>
-                <button class="btn btn-primary" onclick="saveCron()" id="btn-save-cron">
-                    Salvar & Sincronizar Bot <div class="spin" id="cron-sp"></div>
-                  </button>
-              </div>
-          </div>
-      </div>
+                <button class="btn btn-ghost" onclick="closeCronModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveCron()" id="btn-save-cron">
+                    Salvar & Sincronizar Bot <div class="spin" id="cron-sp"></div>
+                  </button>
+              </div>
+          </div>
+      </div>
 
-    <!-- ══ DRAWER DISPARO AVULSO ══════════════════════════════════════════════ -->
-    <div class="drawer" id="drawer">
-        <div class="dhead">
-            <div class="dtitle">✈️ Disparo Avulso</div>
-            <button class="mclose" onclick="closeDrawer()">✕</button>
-          </div>
-        <div class="dbody">
-            <div class="fg2">
-                <label>Importar Produto Existente</label>
-                <select id="d-sel" onchange="onDrSel()">
-                    <option value="">— Em Branco —</option>
-                  </select>
-              </div>
-            <div style="height:1px;background:var(--border);margin:18px 0"></div>
-            <div class="fg2"><label>Link *</label><input id="d-lnk" type="url" placeholder="https://shopee…"></div>
-            <div class="fg2" style="margin-top:12px"><label>Título *</label><input id="d-tit"
+    <!-- ══ DRAWER DISPARO AVULSO ══════════════════════════════════════════════ -->
+    <div class="drawer" id="drawer">
+        <div class="dhead">
+            <div class="dtitle">✈️ Disparo Avulso</div>
+            <button class="mclose" onclick="closeDrawer()">✕</button>
+          </div>
+        <div class="dbody">
+            <div class="fg2">
+                <label>Importar Produto Existente</label>
+                <select id="d-sel" onchange="onDrSel()">
+                    <option value="">— Em Branco —</option>
+                  </select>
+              </div>
+            <div style="height:1px;background:var(--border);margin:18px 0"></div>
+            <div class="fg2"><label>Link *</label><input id="d-lnk" type="url" placeholder="https://shopee…"></div>
+            <div class="fg2" style="margin-top:12px"><label>Título *</label><input id="d-tit"
           placeholder="Nome do produto…">
-              </div>
-            <div class="fg2" style="margin-top:12px"><label>URL da Imagem</label><input id="d-img"
+              </div>
+            <div class="fg2" style="margin-top:12px"><label>URL da Imagem</label><input id="d-img"
           placeholder="https://…">
-              </div>
-            <div class="fg2" style="margin-top:12px"><label>Preço</label><input id="d-pre" placeholder="R$ 0,00"></div>
-          </div>
-        <div class="dfoot">
-            <button class="btn btn-primary btn-full" style="font-size:14px;padding:14px" onclick="sendManual()"
+              </div>
+            <div class="fg2" style="margin-top:12px"><label>Preço</label><input id="d-pre" placeholder="R$ 0,00"></div>
+          </div>
+        <div class="dfoot">
+            <button class="btn btn-primary btn-full" style="font-size:14px;padding:14px" onclick="sendManual()"
         id="btn-snd">
-                ✈️ Enviar Agora <div class="spin" id="snd-sp"></div>
-              </button>
-            <button class="btn btn-ghost btn-full" onclick="closeDrawer()">Cancelar</button>
-          </div>
-      </div>
+                ✈️ Enviar Agora <div class="spin" id="snd-sp"></div>
+              </button>
+            <button class="btn btn-ghost btn-full" onclick="closeDrawer()">Cancelar</button>
+          </div>
+      </div>
 
-    <div id="toast"></div>
+    <div id="toast"></div>
 
-   
+   
   <script>
     const CK = 'acd_cfg_v5';
     const DCFG = { scriptUrl: '', botUrl: '', email: '', pass: '', secret: '', grupo: '', site: '' };
@@ -2383,26 +2383,26 @@
       tb.innerHTML = items.map(p => {
         const isUrg = String(p.Urgente || '').toLowerCase() === 'sim';
         return `<tr>
-          <td><img class="pimg" src="${esc(p.Imagem)}" onerror="this.style.display='none'"></td>
-          <td>
-            <div class="pname">${esc(p.Título)}</div>
-            <div class="pmeta">${p.Categoria || 'Geral'}</div>
-          </td>
-          <td><span class="price">${fp(p.Preço)}</span></td>
-          <td>${sb(p.EnvTelegram)}</td>
-          <td>${siteb(p.Status)}</td>
-          <td>
-            <button class="ib${isUrg ? ' ib-urg' : ''}"
-              title="${isUrg ? 'Desmarcar urgente' : 'Marcar urgente (estoque baixo)'}"
-              onclick="toggleUrgente('${p.ID}', this)">
-              ${isUrg ? '🔥' : '🌡️'}
-            </button>
-            ${isUrg ? '<span class="badge b-urg" style="font-size:9px;margin-left:4px">URGENTE</span>' : ''}
-          </td>
-          <td>
-            <button class="ib" title="Enviar agora" onclick="qSend('${p.ID}', this)">✈️</button>
-          </td>
-        </tr>`;
+          <td><img class="pimg" src="${esc(p.Imagem)}" onerror="this.style.display='none'"></td>
+          <td>
+            <div class="pname">${esc(p.Título)}</div>
+            <div class="pmeta">${p.Categoria || 'Geral'}</div>
+          </td>
+          <td><span class="price">${fp(p.Preço)}</span></td>
+          <td>${sb(p.EnvTelegram)}</td>
+          <td>${siteb(p.Status)}</td>
+          <td>
+            <button class="ib${isUrg ? ' ib-urg' : ''}"
+              title="${isUrg ? 'Desmarcar urgente' : 'Marcar urgente (estoque baixo)'}"
+              onclick="toggleUrgente('${p.ID}', this)">
+              ${isUrg ? '🔥' : '🌡️'}
+            </button>
+            ${isUrg ? '<span class="badge b-urg" style="font-size:9px;margin-left:4px">URGENTE</span>' : ''}
+          </td>
+          <td>
+            <button class="ib" title="Enviar agora" onclick="qSend('${p.ID}', this)">✈️</button>
+          </td>
+        </tr>`;
       }).join('');
     }
 
@@ -2416,24 +2416,24 @@
       tb.innerHTML = list.map(p => {
         const isUrg = String(p.Urgente || '').toLowerCase() === 'sim';
         return `<tr>
-          <td><img class="pimg" src="${esc(p.Imagem)}" onerror="this.style.display='none'"></td>
-          <td>
-            <div class="pname">${esc(p.Título)}</div>
-            <div class="pmeta">ID: ${esc(String(p.ID || '').substring(0, 8))}</div>
-          </td>
-          <td><span class="price">${fp(p.Preço)}</span></td>
-          <td>${esc(p.Categoria || '—')}</td>
-          <td>${sb(p.EnvTelegram)}</td>
-          <td>${siteb(p.Status)}</td>
-          <td>
-            <button class="ib${isUrg ? ' ib-urg' : ''}"
-              title="${isUrg ? 'Desmarcar urgente' : 'Marcar urgente'}"
-              onclick="toggleUrgente('${p.ID}', this)">
-              ${isUrg ? '🔥' : '🌡️'}
-            </button>
-          </td>
-          <td><button class="ib" onclick="openEdit('${p.ID}')">✏️</button></td>
-        </tr>`;
+          <td><img class="pimg" src="${esc(p.Imagem)}" onerror="this.style.display='none'"></td>
+          <td>
+            <div class="pname">${esc(p.Título)}</div>
+            <div class="pmeta">ID: ${esc(String(p.ID || '').substring(0, 8))}</div>
+          </td>
+          <td><span class="price">${fp(p.Preço)}</span></td>
+          <td>${esc(p.Categoria || '—')}</td>
+          <td>${sb(p.EnvTelegram)}</td>
+          <td>${siteb(p.Status)}</td>
+          <td>
+            <button class="ib${isUrg ? ' ib-urg' : ''}"
+              title="${isUrg ? 'Desmarcar urgente' : 'Marcar urgente'}"
+              onclick="toggleUrgente('${p.ID}', this)">
+              ${isUrg ? '🔥' : '🌡️'}
+            </button>
+          </td>
+          <td><button class="ib" onclick="openEdit('${p.ID}')">✏️</button></td>
+        </tr>`;
       }).join('');
     }
 
@@ -2498,15 +2498,15 @@
       if (grid) {
         if (cronData.length === 0) grid.innerHTML = '<div style="grid-column:1/-1"><div class="empty"><div class="eico">⏰</div>Nenhum agendamento.</div></div>';
         else grid.innerHTML = cronData.map(c => `<div class="cron-card">
-      <div class="cron-card-header"><div class="cron-time">⏰ ${c.Horario}</div><span class="badge ${c.Ativo === 'sim' ? 'b-done' : 'b-pau'}">${c.Ativo === 'sim' ? 'Ativo' : 'Pausado'}</span></div>
-      ${c.Imagem ? `<div style="border-radius:var(--r);overflow:hidden;margin-bottom:8px;max-height:90px"><img src="${esc(c.Imagem)}" alt="imagem fixa" style="width:100%;height:90px;object-fit:cover;display:block" onerror="this.parentElement.style.display='none'"></div>` : ''}
-      <div class="cron-tmpl-preview">${c.Template ? esc(c.Template) : '<i>Template Base Padrão</i>'}${c.Imagem ? ' <span style="color:var(--blue);font-size:10px;font-weight:700">🖼 Imagem fixa</span>' : ''}</div>
-      <div style="display:flex;gap:8px;margin-top:4px">
-        ${c.Ativo === 'sim' ? `<button class="btn btn-green btn-sm" id="btn-disp-${c.ID}" onclick="dispararCronAgora('${c.ID}')">▶ Disparar</button>` : ''}
-        <button class="btn btn-ghost btn-sm btn-full" onclick="openCronModal('${c.ID}')">✏️ Editar</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteCron('${c.ID}')">🗑</button>
-      </div>
-    </div>`).join('');
+      <div class="cron-card-header"><div class="cron-time">⏰ ${c.Horario}</div><span class="badge ${c.Ativo === 'sim' ? 'b-done' : 'b-pau'}">${c.Ativo === 'sim' ? 'Ativo' : 'Pausado'}</span></div>
+      ${c.Imagem ? `<div style="border-radius:var(--r);overflow:hidden;margin-bottom:8px;max-height:90px"><img src="${esc(c.Imagem)}" alt="imagem fixa" style="width:100%;height:90px;object-fit:cover;display:block" onerror="this.parentElement.style.display='none'"></div>` : ''}
+      <div class="cron-tmpl-preview">${c.Template ? esc(c.Template) : '<i>Template Base Padrão</i>'}${c.Imagem ? ' <span style="color:var(--blue);font-size:10px;font-weight:700">🖼 Imagem fixa</span>' : ''}</div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        ${c.Ativo === 'sim' ? `<button class="btn btn-green btn-sm" id="btn-disp-${c.ID}" onclick="dispararCronAgora('${c.ID}')">▶ Disparar</button>` : ''}
+        <button class="btn btn-ghost btn-sm btn-full" onclick="openCronModal('${c.ID}')">✏️ Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCron('${c.ID}')">🗑</button>
+      </div>
+    </div>`).join('');
       }
     }
 
@@ -2613,34 +2613,34 @@
 
         if (isCron) {
           return `<div class="hist-card">
-        <div class="hist-card-img-ph" style="background:var(--accent-l);color:var(--accent);font-size:22px">⏰</div>
-        <div class="hist-card-body">
-          <div class="hist-card-meta"><span class="badge ${h.Status_Final === 'sucesso' ? 'b-done' : 'b-no'}">${esc(h.Status_Final || '—')}</span><span class="hist-card-platform" style="color:var(--accent);font-weight:800">Banner CRON</span></div>
-          <div class="hist-card-name" style="color:var(--text2);font-style:italic">Disparo agendado automático</div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><span class="hist-card-price">—</span><span class="hist-card-date">${esc(h.Data_Envio || '—')}</span></div>
-          ${msgId ? `<div style="font-size:10px;color:var(--text3);margin-top:5px;font-family:var(--mono)">msg_id: ${esc(msgId)}</div>` : ''}
-        </div>
-        <div class="hist-card-footer">
-          <button class="btn btn-danger btn-xs btn-full" onclick="apagarCron('${h.ID_Produto}', '${msgId}')">🗑️ Apagar do Canal</button>
-        </div>
-      </div>`;
+        <div class="hist-card-img-ph" style="background:var(--accent-l);color:var(--accent);font-size:22px">⏰</div>
+        <div class="hist-card-body">
+          <div class="hist-card-meta"><span class="badge ${h.Status_Final === 'sucesso' ? 'b-done' : 'b-no'}">${esc(h.Status_Final || '—')}</span><span class="hist-card-platform" style="color:var(--accent);font-weight:800">Banner CRON</span></div>
+          <div class="hist-card-name" style="color:var(--text2);font-style:italic">Disparo agendado automático</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><span class="hist-card-price">—</span><span class="hist-card-date">${esc(h.Data_Envio || '—')}</span></div>
+          ${msgId ? `<div style="font-size:10px;color:var(--text3);margin-top:5px;font-family:var(--mono)">msg_id: ${esc(msgId)}</div>` : ''}
+        </div>
+        <div class="hist-card-footer">
+          <button class="btn btn-danger btn-xs btn-full" onclick="apagarCron('${h.ID_Produto}', '${msgId}')">🗑️ Apagar do Canal</button>
+        </div>
+      </div>`;
         }
 
         const prod = prods.find(p => p.ID === h.ID_Produto) || {}, titulo = prod.Título || h.ID_Produto || 'Produto', imagem = prod.Imagem || '', preco = prod.Preço ? fp(prod.Preço) : '—';
         return `<div class="hist-card">
-      ${imagem ? `<img class="hist-card-img" src="${esc(imagem)}" onerror="this.src='';this.className='hist-card-img-ph';this.innerHTML='🛍'">` : `<div class="hist-card-img-ph">🛍</div>`}
-      <div class="hist-card-body">
-        <div class="hist-card-meta"><span class="badge ${h.Status_Final === 'sucesso' ? 'b-done' : 'b-no'}">${esc(h.Status_Final || '—')}</span><span class="hist-card-platform">Telegram</span></div>
-        <div class="hist-card-name">${esc(titulo)}</div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><span class="hist-card-price">${preco}</span><span class="hist-card-date">${esc(h.Data_Envio || '—')}</span></div>
-        ${msgId ? `<div style="font-size:10px;color:var(--text3);margin-top:5px;font-family:var(--mono)">msg_id: ${esc(msgId)}</div>` : ''}
-      </div>
-      <div class="hist-card-footer">
-        <button class="btn btn-ghost btn-xs" onclick="qSend('${h.ID_Produto}')">🔄 Reenviar</button>
-        <button class="btn btn-ghost btn-xs" onclick="editarTelegram('${h.ID_Produto}', '${msgId}')">✏️ Editar</button>
-        <button class="btn btn-ghost btn-xs" onclick="apagarTelegram('${h.ID_Produto}', '${msgId}')">🗑️ Apagar</button>
-      </div>
-    </div>`;
+      ${imagem ? `<img class="hist-card-img" src="${esc(imagem)}" onerror="this.src='';this.className='hist-card-img-ph';this.innerHTML='🛍'">` : `<div class="hist-card-img-ph">🛍</div>`}
+      <div class="hist-card-body">
+        <div class="hist-card-meta"><span class="badge ${h.Status_Final === 'sucesso' ? 'b-done' : 'b-no'}">${esc(h.Status_Final || '—')}</span><span class="hist-card-platform">Telegram</span></div>
+        <div class="hist-card-name">${esc(titulo)}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><span class="hist-card-price">${preco}</span><span class="hist-card-date">${esc(h.Data_Envio || '—')}</span></div>
+        ${msgId ? `<div style="font-size:10px;color:var(--text3);margin-top:5px;font-family:var(--mono)">msg_id: ${esc(msgId)}</div>` : ''}
+      </div>
+      <div class="hist-card-footer">
+        <button class="btn btn-ghost btn-xs" onclick="qSend('${h.ID_Produto}')">🔄 Reenviar</button>
+        <button class="btn btn-ghost btn-xs" onclick="editarTelegram('${h.ID_Produto}', '${msgId}')">✏️ Editar</button>
+        <button class="btn btn-ghost btn-xs" onclick="apagarTelegram('${h.ID_Produto}', '${msgId}')">🗑️ Apagar</button>
+      </div>
+    </div>`;
       }).join('');
     }
 
@@ -2672,50 +2672,32 @@
       } catch (e) { toast(e.message, 'err'); } finally { if (btnEl) btnEl.disabled = false; }
     }
 
-    function cronPayloadFromCache(id = null) {
-      const norm = v => String(v || '').trim().toLowerCase();
-      const cron = id
-        ? cronData.find(x => String(x.ID) === String(id))
-        : (cronData.find(x => norm(x.Ativo) === 'sim') || cronData[0]);
-
-      if (!cron) return {};
-
-      return {
-        cron_id: cron.ID || id || '',
-        template: cron.Template || '',
-        imagem: cron.Imagem || ''
-      };
-    }
-
-    // Disparo manual do dashboard: usa o primeiro agendamento ativo, não o template genérico.
+    // Força o primeiro agendamento ativo usando o endpoint antigo do backend.
+    // Não envia template/imagem e não exige mudança no main.py.
     async function forcarCiclo() {
       const btn = document.getElementById('btn-ciclo'), sp = document.getElementById('ciclo-sp');
       btn.disabled = true; sp.classList.add('on');
       try {
         if (!cronData.length) await loadCrons();
-        const payload = cronPayloadFromCache();
-        const j = await botFetch('/disparar-cron', payload);
+        const norm = v => String(v || '').trim().toLowerCase();
+        const cron = cronData.find(c => norm(c.Ativo) === 'sim') || cronData[0];
+        if (!cron || !cron.ID) throw new Error('Nenhum agendamento encontrado para disparar.');
+
+        const j = await botFetch('/disparar-cron', { cron_id: cron.ID });
         toast(j.status ? '⏰ Banner CRON disparado no Telegram!' : 'Falha no disparo do CRON.', j.status ? 'ok' : 'err');
-        addLog(`Forçar Banner CRON: ${j.status ? 'ok' : 'erro'}${j.cron_id ? ' — ' + j.cron_id : ''}`, j.status ? 'ok' : 'err');
-      } catch (e) {
-        toast(e.message, 'err');
-        addLog(`Erro forçar CRON: ${e.message}`, 'err');
-      } finally {
-        btn.disabled = false;
-        sp.classList.remove('on');
-      }
+        addLog(`Forçar Banner CRON ${cron.ID}: ${j.status ? 'ok' : 'erro'}`, j.status ? 'ok' : 'err');
+      } catch (e) { toast(e.message, 'err'); addLog(`Erro forçar CRON: ${e.message}`, 'err'); }
+      finally { btn.disabled = false; sp.classList.remove('on'); }
     }
 
-    // Dispara um agendamento específico imediatamente.
+    // ══ NOVO: dispara um agendamento específico imediatamente ════════════════
     async function dispararCronAgora(id) {
       const btn = document.getElementById('btn-disp-' + id);
       if (btn) btn.disabled = true;
       toast('Disparando agendamento…', 'warn');
       try {
-        const payload = cronPayloadFromCache(id);
-        if (!payload.cron_id) payload.cron_id = id;
-
-        const j = await botFetch('/disparar-cron', payload);
+        // Passa o cron_id para o bot buscar template e imagem do cron específico
+        const j = await botFetch('/disparar-cron', { cron_id: id });
         if (j.status) {
           toast('⏰ Agendamento disparado com sucesso no Telegram!');
           addLog(`Cron ${id} disparado manualmente.`, 'ok');
