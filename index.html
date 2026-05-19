@@ -2503,11 +2503,12 @@
       document.getElementById('modal-cron').classList.add('open');
     }
 
-    function driveUrl(idOrUrl) {
+function driveUrl(idOrUrl) {
       if (!idOrUrl) return '';
       const s = idOrUrl.trim();
       if (s.startsWith('http')) return s;
-      return `https://drive.google.com/uc?export=view&id=${s}`;
+      // Updated endpoint to bypass Google's new restrictions
+      return `https://drive.google.com/thumbnail?id=${s}&sz=w800`;
     }
 
     function previewCronImg(val) {
