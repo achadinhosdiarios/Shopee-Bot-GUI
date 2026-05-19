@@ -2269,53 +2269,138 @@
     }
 
     // -- AUTH & INICIALIZAÇÃO --
-    async function doLogin() {
-      const em = document.getElementById('l-email').value.trim(), pw = document.getElementById('l-pass').value;
-      const sp = document.getElementById('l-spin'), er = document.getElementById('l-err'), btn = document.getElementById('btn-login');
-      er.style.display = 'none'; sp.classList.add('on'); btn.disabled = true;
-
-      const setupVisible = document.getElementById('l-setup').style.display !== 'none';
-      if (setupVisible) {
-        const scriptUrl = document.getElementById('l-script').value.trim();
-        const botUrl = getCleanUrl(document.getElementById('l-bot').value);
-        const secret = document.getElementById('l-secret').value;
-        if (!scriptUrl || !em || !pw) {
-          er.textContent = 'Preencha a URL do Apps Script, e-mail e senha.'; er.style.display = 'block';
-          sp.classList.remove('on'); btn.disabled = false; return;
-        }
-        sCfg({ ...getCfg(), scriptUrl, botUrl, email: em, pass: pw, secret });
-      }
-
+    function showLoginSetup(message = '') {
       const cfg = getCfg();
+      const setup = document.getElementById('l-setup');
+      setup.style.display = 'block';
+      document.getElementById('l-title').textContent = 'Configuração inicial';
+      document.getElementById('l-sub').textContent = message || 'Preencha os dados do projeto para começar.';
 
-      if (!cfg.scriptUrl) {
-        er.textContent = 'Configure a URL do Apps Script antes de logar.'; er.style.display = 'block';
-        sp.classList.remove('on'); btn.disabled = false; return;
-      }
+      const scriptInput = document.getElementById('l-script');
+      const botInput = document.getElementById('l-bot');
+      const secretInput = document.getElementById('l-secret');
 
-      if (em === cfg.email && pw === cfg.pass && em) {
-        try {
-          await fetchWithTimeout(cfg.scriptUrl, {
-            method: 'POST', mode: 'no-cors',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'login', email: em, password: pw, key: cfg.pass }),
+      if (scriptInput && !scriptInput.value) scriptInput.value = cfg.scriptUrl || DCFG.scriptUrl || '';
+      if (botInput && !botInput.value) botInput.value = cfg.botUrl || DCFG.botUrl || '';
+      if (secretInput && !secretInput.value) secretInput.value = cfg.secret || '';
+    }
+
+    function resetPanelConfig() {
+      localStorage.removeItem(CK);
+      localStorage.removeItem('acd_auth_v5');
+      authTok = null;
+
+      document.getElementById('l-email').value = '';
+      document.getElementById('l-pass').value = '';
+      document.getElementById('login-screen').style.cssText = 'display:flex;opacity:1';
+      document.getElementById('app').style.display = 'none';
+
+      showLoginSetup('Configuração local apagada. Preencha novamente a URL do Apps Script, e-mail e senha.');
+      const er = document.getElementById('l-err');
+      er.textContent = 'Configuração local apagada. Cadastre novamente o acesso neste navegador.';
+      er.style.display = 'block';
+    }
+
+    async function doLogin() {
+      const em = document.getElementById('l-email').value.trim();
+      const pw = document.getElementById('l-pass').value;
+      const sp = document.getElementById('l-spin');
+      const er = document.getElementById('l-err');
+      const btn = document.getElementById('btn-login');
+
+      er.style.display = 'none';
+      sp.classList.add('on');
+      btn.disabled = true;
+
+      let logged = false;
+
+      try {
+        const setupVisible = document.getElementById('l-setup').style.display !== 'none';
+        let cfg = getCfg();
+
+        if (setupVisible) {
+          const scriptUrl = document.getElementById('l-script').value.trim();
+          const botUrl = getCleanUrl(document.getElementById('l-bot').value);
+          const secret = document.getElementById('l-secret').value;
+
+          if (!scriptUrl || !em || !pw) {
+            er.textContent = 'Preencha a URL do Apps Script, e-mail e senha.';
+            er.style.display = 'block';
+            return;
+          }
+
+          sCfg({
+            ...cfg,
+            scriptUrl,
+            botUrl,
+            email: em,
+            pass: pw,
+            secret,
+            site: cfg.site || DCFG.site || ''
           });
-        } catch (_) { }
-        authTok = cfg.pass; localStorage.setItem('acd_auth_v5', authTok); boot();
-      } else {
-        er.textContent = 'Credenciais inválidas.'; er.style.display = 'block';
-        sp.classList.remove('on'); btn.disabled = false;
+          cfg = getCfg();
+        }
+
+        if (!cfg.scriptUrl) {
+          showLoginSetup('Informe a URL do Apps Script antes de entrar.');
+          er.textContent = 'Configure a URL do Apps Script antes de logar.';
+          er.style.display = 'block';
+          return;
+        }
+
+        if (!cfg.email || !cfg.pass) {
+          showLoginSetup('Este navegador ainda não tem e-mail/senha salvos. Faça a configuração inicial.');
+          er.textContent = 'Faça a configuração inicial neste navegador.';
+          er.style.display = 'block';
+          return;
+        }
+
+        if (em === cfg.email && pw === cfg.pass && em) {
+          // Apps Script Web App frequentemente não permite ler resposta POST por CORS.
+          // Por isso o painel usa a credencial local salva como token e valida as ações seguintes pela chave.
+          try {
+            await fetchWithTimeout(cfg.scriptUrl, {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({ action: 'login', email: em, password: pw, key: cfg.pass }),
+              timeout: 15000,
+            });
+          } catch (_) { }
+
+          authTok = cfg.pass;
+          localStorage.setItem('acd_auth_v5', authTok);
+          logged = true;
+          boot();
+          return;
+        }
+
+        er.innerHTML = 'Credenciais inválidas para este navegador. Se você alterou a senha ou trocou de computador, <button type="button" onclick="resetPanelConfig()" style="margin-left:6px;padding:4px 8px;border-radius:6px;border:1px solid currentColor;background:transparent;color:inherit;font-weight:800;cursor:pointer">resetar configuração</button>';
+        er.style.display = 'block';
+      } finally {
+        if (!logged) {
+          sp.classList.remove('on');
+          btn.disabled = false;
+        }
       }
     }
 
-    function doLogout() { authTok = null; localStorage.removeItem('acd_auth_v5'); document.getElementById('login-screen').style.cssText = 'display:flex;opacity:1'; document.getElementById('app').style.display = 'none'; }
+    function doLogout() {
+      authTok = null;
+      localStorage.removeItem('acd_auth_v5');
+      document.getElementById('login-screen').style.cssText = 'display:flex;opacity:1';
+      document.getElementById('app').style.display = 'none';
+    }
 
     function boot() {
       document.getElementById('login-screen').style.opacity = '0';
       setTimeout(() => {
-        document.getElementById('login-screen').style.display = 'none'; document.getElementById('app').style.display = 'flex';
-        loadCfgUI(); addLog('Sistema inicializado.', 'ok');
-        loadAll(); checkBot();
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        loadCfgUI();
+        addLog('Sistema inicializado.', 'ok');
+        loadAll();
+        checkBot();
       }, 380);
     }
 
@@ -2873,13 +2958,28 @@ function driveUrl(idOrUrl) {
 
     window.onload = () => {
       initTheme();
-      const saved = localStorage.getItem('acd_auth_v5');
-      if (saved) { authTok = saved; boot(); return; }
+
+      const reset = new URLSearchParams(window.location.search).get('reset');
+      if (reset === '1') {
+        localStorage.removeItem(CK);
+        localStorage.removeItem('acd_auth_v5');
+        history.replaceState(null, '', window.location.pathname);
+      }
+
       const cfg = getCfg();
-      if (!cfg.scriptUrl && !cfg.email) {
-        document.getElementById('l-setup').style.display = 'block';
-        document.getElementById('l-title').textContent = 'Configuração inicial';
-        document.getElementById('l-sub').textContent = 'Preencha os dados do projeto para começar.';
+      const saved = localStorage.getItem('acd_auth_v5');
+
+      if (saved && cfg.scriptUrl) {
+        authTok = saved;
+        boot();
+        return;
+      }
+
+      // Importante: DCFG já tem scriptUrl padrão, então a condição antiga
+      // (!cfg.scriptUrl && !cfg.email) deixava a tela de setup escondida
+      // mesmo sem e-mail/senha salvos. Isso prendia o usuário no login.
+      if (!cfg.scriptUrl || !cfg.email || !cfg.pass) {
+        showLoginSetup('Primeiro acesso neste navegador: confirme a URL do Apps Script, e-mail e senha.');
       }
     };
   </script>
