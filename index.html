@@ -1490,10 +1490,269 @@
       color: var(--yellow);
     }
 
+
+
+    /* ══ UI REFINEMENTS — INVENTÁRIO / CONFIG / DASHBOARD ═════════════════ */
+    .home-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .quick-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .inventory-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 16px;
+      box-shadow: var(--sh);
+    }
+
+    .inventory-filters {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) 190px 190px;
+      gap: 12px;
+      align-items: center;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .inventory-count {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--text2);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .inventory-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 18px;
+    }
+
+    .inv-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow: var(--sh);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 136px minmax(0, 1fr);
+      min-height: 210px;
+      transition: var(--transition);
+    }
+
+    .inv-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border2);
+      box-shadow: var(--sh-md);
+    }
+
+    .inv-img-wrap {
+      background: var(--surface2);
+      border-right: 1px solid var(--border);
+      min-height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .inv-img {
+      width: 100%;
+      height: 100%;
+      min-height: 210px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .inv-img-ph {
+      width: 100%;
+      height: 100%;
+      min-height: 210px;
+      display: grid;
+      place-items: center;
+      color: var(--text3);
+      font-size: 36px;
+      background: var(--surface2);
+    }
+
+    .inv-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .inv-topline {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .inv-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .inv-price {
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--green);
+      white-space: nowrap;
+    }
+
+    .inv-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .inv-meta {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 10px;
+      min-width: 0;
+    }
+
+    .inv-meta-l {
+      display: block;
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--text3);
+      margin-bottom: 3px;
+    }
+
+    .inv-meta-v {
+      display: block;
+      font-size: 12px;
+      color: var(--text);
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .inv-badges {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .inv-note {
+      font-size: 12px;
+      color: var(--text2);
+      background: var(--surface2);
+      border: 1px dashed var(--border2);
+      border-radius: 10px;
+      padding: 9px 10px;
+      line-height: 1.45;
+    }
+
+    .inv-actions {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    .btn-icon-soft {
+      background: var(--surface2);
+      border-color: var(--border);
+      color: var(--text2);
+      min-width: 0;
+    }
+
+    .btn-icon-soft:hover {
+      background: var(--surface3);
+      color: var(--text);
+    }
+
+    .config-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 24px;
+      align-items: start;
+      max-width: 1180px;
+    }
+
+    .config-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      min-width: 0;
+    }
+
+    .connection-card {
+      position: sticky;
+      top: 88px;
+    }
+
+    .connection-status-box {
+      background: var(--surface2);
+      border: 1.5px dashed var(--border2);
+      border-radius: var(--r);
+      padding: 16px;
+      min-height: 134px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+      color: var(--text2);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .connection-status-box strong {
+      color: var(--text);
+    }
+
+    .telegram-help {
+      margin-bottom: 20px;
+      border-color: var(--blue-l);
+    }
+
     /* ══ RESPONSIVE ══════════════════════════════════════════════════════════ */
     @media (max-width:1200px) {
       :root {
         --sb-w: 68px;
+      }
+
+      .home-grid,
+      .config-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .connection-card {
+        position: static;
       }
 
       .sb-name,
@@ -1524,8 +1783,24 @@
     }
 
     @media (max-width:768px) {
-      .fg {
+      .fg,
+      .inventory-filters,
+      .inv-card {
         grid-template-columns: 1fr;
+      }
+
+      .inventory-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .inv-img-wrap,
+      .inv-img,
+      .inv-img-ph {
+        min-height: 180px;
+      }
+
+      .inv-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
       .stats {
@@ -1685,7 +1960,7 @@
               <div class="stat-l">Pendentes (Telegram)</div>
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 320px;gap:28px;align-items:start">
+          <div class="home-grid">
             <div>
               <div class="sh">
                 <div class="st">Fila de Pendentes</div>
@@ -1734,15 +2009,11 @@
                 <div class="card-head">
                   <div class="card-title">⚡ Ações Rápidas</div>
                 </div>
-                <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+                <div class="card-body quick-actions">
                   <button class="btn btn-green btn-full" onclick="enviarProximo()" id="btn-prox" style="padding:13px">
                     🚀 Disparar 1º da Fila <div class="spin" id="prox-sp"></div>
                   </button>
-                  <button class="btn btn-ghost btn-full" onclick="forcarCiclo()" id="btn-ciclo">
-                    ⏰ Forçar Banner CRON <div class="spin dark" id="ciclo-sp"></div>
-                  </button>
-                  <div class="divider"></div>
-                  <button class="btn btn-primary btn-full" onclick="openDrawer()">
+                  <button class="btn btn-primary btn-full" onclick="openDrawer()" style="padding:13px">
                     ✈️ Disparo Avulso
                   </button>
                 </div>
@@ -1753,47 +2024,27 @@
 
         <!-- ══ INVENTÁRIO ═════════════════════════════════════════════════════ -->
         <div class="panel" id="p-produtos">
-          <div class="sh">
-            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-              <input id="q-s" placeholder="🔍 Buscar produto…" style="width:240px" oninput="filterTbl()">
-              <select id="q-st" onchange="filterTbl()" style="width:180px">
+          <div class="inventory-toolbar">
+            <div class="inventory-filters">
+              <input id="q-s" placeholder="🔍 Buscar produto por título…" oninput="filterTbl()">
+              <select id="q-st" onchange="filterTbl()">
                 <option value="">Telegram: Todos</option>
                 <option value="pendente">Telegram: Pendente</option>
                 <option value="feito">Telegram: Enviado</option>
                 <option value="pausado">Telegram: Pausado</option>
               </select>
-              <select id="q-site" onchange="filterTbl()" style="width:180px">
+              <select id="q-site" onchange="filterTbl()">
                 <option value="">Site: Todos</option>
                 <option value="feito">Site: Disponíveis</option>
                 <option value="pendente">Site: Ocultos</option>
               </select>
             </div>
-            <span id="q-count" style="font-size:13px;font-weight:700;color:var(--text3)">0 registros</span>
+            <span id="q-count" class="inventory-count">0 registros</span>
           </div>
-          <div class="tbl compact">
-            <table>
-              <thead>
-                <tr>
-                  <th></th>
-                  <th>Produto</th>
-                  <th>Preço</th>
-                  <th>Categoria</th>
-                  <th>Telegram</th>
-                  <th>Site</th>
-                  <th>🔥</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody id="prod-tbl">
-                <tr>
-                  <td colspan="8">
-                    <div class="empty">
-                      <div class="eico">⏳</div>Sincronizando…
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="inventory-grid" id="prod-tbl">
+            <div class="empty" style="grid-column:1/-1">
+              <div class="eico">⏳</div>Sincronizando…
+            </div>
           </div>
         </div>
 
@@ -1844,12 +2095,12 @@
               <div class="hist-stat-l">Falhas</div>
             </div>
           </div>
-          <div class="card" style="margin-bottom:20px;border-color:var(--blue-l)">
+          <div class="card telegram-help">
             <div class="card-body" style="display:flex;align-items:flex-start;gap:14px;padding:16px 20px">
               <div style="font-size:22px">💡</div>
-              <p style="font-size:13px;color:var(--text2);line-height:1.6">Para Editar ou Apagar, o Bot precisa do <code
+              <p style="font-size:13px;color:var(--text2);line-height:1.6">Nesta página, mantemos só as ações essenciais do canal: <b>reenviar</b> uma oferta ou <b>excluir</b> a mensagem publicada. Para excluir, o Bot precisa do <code
                   style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-family:var(--mono);color:var(--blue);font-size:11px">message_id</code>
-                salvo no histórico. O botão de Reenviar cria uma nova postagem ignorando o id.</p>
+                salvo no histórico.</p>
             </div>
           </div>
           <div class="hist-grid" id="hist-grid">
@@ -1927,56 +2178,67 @@
 
         <!-- ══ CONFIGURAÇÕES ══════════════════════════════════════════════════ -->
         <div class="panel" id="p-config">
-          <div style="max-width:780px;display:flex;flex-direction:column;gap:24px">
-            <div class="card">
-              <div class="card-head">
-                <div class="card-title">🌐 Endpoints & Conexões</div>
-              </div>
-              <div class="card-body fg">
-                <div class="fg2 full">
-                  <label>Google Apps Script URL *</label>
-                  <input id="c-sc" type="url" placeholder="https://script.google.com/macros/s/.../exec">
-                  <div class="hint">Responsável pelo CRUD na planilha.</div>
+          <div class="config-layout">
+            <div class="config-stack">
+              <div class="card">
+                <div class="card-head">
+                  <div class="card-title">🌐 Endpoints & Conexões</div>
                 </div>
-                <div class="fg2 full">
-                  <label>Hostname FastAPI (Discloud) *</label>
-                  <input id="c-bot" type="url" placeholder="https://SEU-APP.discloud.app">
-                  <div class="hint" style="color:var(--red)">Atenção: A URL deve começar obrigatoriamente com
-                    <b>https://</b>
+                <div class="card-body fg">
+                  <div class="fg2 full">
+                    <label>Google Apps Script URL *</label>
+                    <input id="c-sc" type="url" placeholder="https://script.google.com/macros/s/.../exec">
+                    <div class="hint">Responsável pelo CRUD na planilha.</div>
+                  </div>
+                  <div class="fg2 full">
+                    <label>Hostname FastAPI (Discloud) *</label>
+                    <input id="c-bot" type="url" placeholder="https://SEU-APP.discloud.app">
+                    <div class="hint" style="color:var(--red)">Atenção: a URL deve começar obrigatoriamente com
+                      <b>https://</b> e não deve terminar com barra.</div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="card">
-              <div class="card-head">
-                <div class="card-title">🔐 Segurança</div>
+              <div class="card">
+                <div class="card-head">
+                  <div class="card-title">🔐 Segurança</div>
+                </div>
+                <div class="card-body fg">
+                  <div class="fg2"><label>E-mail Root</label><input id="c-em" type="email" autocomplete="off"></div>
+                  <div class="fg2"><label>Senha Root</label><input id="c-pw" type="password" autocomplete="off"></div>
+                  <div class="fg2 full">
+                    <label>API Secret Token</label>
+                    <input id="c-sec" type="password" placeholder="Chave mestra de segurança…" autocomplete="off">
+                    <div class="hint">Usado pelo painel para autorizar ações no FastAPI.</div>
+                  </div>
+                </div>
               </div>
-              <div class="card-body fg">
-                <div class="fg2"><label>E-mail Root</label><input id="c-em" type="email" autocomplete="off"></div>
-                <div class="fg2"><label>Senha Root</label><input id="c-pw" type="password" autocomplete="off"></div>
-                <div class="fg2 full">
-                  <label>API Secret Token</label>
-                  <input id="c-sec" type="password" placeholder="Chave mestra de segurança…" autocomplete="off">
+              <div class="card">
+                <div class="card-head">
+                  <div class="card-title">📢 Redes & Frontend</div>
+                </div>
+                <div class="card-body fg">
+                  <div class="fg2"><label>Telegram Group Link</label><input id="c-grp" placeholder="https://t.me/…"></div>
+                  <div class="fg2"><label>Website / Catálogo</label><input id="c-sit" placeholder="https://…"></div>
                 </div>
               </div>
             </div>
-            <div class="card">
+
+            <div class="card connection-card">
               <div class="card-head">
-                <div class="card-title">📢 Redes & Frontend</div>
+                <div class="card-title">🔌 Teste & Diagnóstico</div>
               </div>
-              <div class="card-body fg">
-                <div class="fg2"><label>Telegram Group Link</label><input id="c-grp" placeholder="https://t.me/…"></div>
-                <div class="fg2"><label>Website / Catálogo</label><input id="c-sit" placeholder="https://…"></div>
+              <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+                <div class="connection-status-box">
+                  <strong>Validação rápida</strong>
+                  <span>Use este bloco para gravar as configurações e testar o ping do bot na Discloud sem misturar com os campos principais.</span>
+                </div>
+                <button class="btn btn-primary btn-full" onclick="saveConf()">💾 Gravar Configurações</button>
+                <button class="btn btn-ghost btn-full" onclick="testConn()">
+                  🔌 Testar Conexão <div class="spin dark" id="test-sp"></div>
+                </button>
+                <div id="test-result" style="display:none;animation:panelIn .3s ease"></div>
               </div>
             </div>
-            <div
-              style="display:flex;gap:12px;flex-wrap:wrap;background:var(--surface);padding:20px;border-radius:var(--r-lg);border:1.5px solid var(--border);box-shadow:var(--sh)">
-              <button class="btn btn-primary" onclick="saveConf()">💾 Gravar Configurações</button>
-              <button class="btn btn-ghost" onclick="testConn()">
-                🔌 Testar Conexão <div class="spin dark" id="test-sp"></div>
-              </button>
-            </div>
-            <div id="test-result" style="display:none;animation:panelIn .3s ease"></div>
           </div>
         </div>
 
@@ -2413,31 +2675,49 @@
     }
 
     function renderProds(list) {
-      const tb = document.getElementById('prod-tbl');
+      const wrap = document.getElementById('prod-tbl');
       document.getElementById('q-count').textContent = `${list.length} registros`;
       if (!list.length) {
-        tb.innerHTML = '<tr><td colspan="8"><div class="empty"><div class="eico">📭</div>Nada encontrado.</div></td></tr>';
+        wrap.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="eico">📭</div>Nada encontrado.</div>';
         return;
       }
-      tb.innerHTML = list.map(p => {
+      wrap.innerHTML = list.map(p => {
         const isUrg = String(p.Urgente || '').toLowerCase() === 'sim';
-        return `<tr>
-          <td><img class="pimg" src="${esc(p.Imagem)}" onerror="this.style.display='none'"></td>
-          <td>
-            <div class="pname">${esc(p.Título)}</div>
-            <div class="pmeta">ID: ${esc(String(p.ID || '').substring(0, 8))}</div>
-          </td>
-          <td><span class="price">${fp(p.Preço)}</span></td>
-          <td>${esc(p.Categoria || '—')}</td>
-          <td>${sb(p.EnvTelegram)}</td>
-          <td>${siteb(p.Status)}</td>
-          <td>
-            <button class="ib${isUrg ? ' ib-urg' : ''}" title="${isUrg ? 'Desmarcar urgente' : 'Marcar urgente'}" onclick="toggleUrgente('${p.ID}', this)">
-              ${isUrg ? '🔥' : '🌡️'}
-            </button>
-          </td>
-          <td><button class="ib" onclick="openEdit('${p.ID}')">✏️</button></td>
-        </tr>`;
+        const img = p.Imagem ? `<img class="inv-img" src="${esc(p.Imagem)}" onerror="this.outerHTML='<div class=&quot;inv-img-ph&quot;>🛍️</div>'">` : `<div class="inv-img-ph">🛍️</div>`;
+        const idShort = esc(String(p.ID || '').substring(0, 8) || '—');
+        const shop = esc(p.ShopId || '—');
+        const item = esc(p.ItemId || '—');
+        const comentario = esc(p['Comentário'] || 'Sem observações.');
+        const data = esc(p.Data || '—');
+        const link = p.Link ? `<a class="btn btn-ghost btn-sm btn-icon-soft" href="${esc(p.Link)}" target="_blank" rel="noopener">🔗 Link</a>` : `<button class="btn btn-ghost btn-sm btn-icon-soft" disabled>🔗 Link</button>`;
+        return `<div class="inv-card">
+          <div class="inv-img-wrap">${img}</div>
+          <div class="inv-body">
+            <div class="inv-topline">
+              <div class="inv-title">${esc(p.Título)}</div>
+              <div class="inv-price">${fp(p.Preço)}</div>
+            </div>
+            <div class="inv-badges">
+              ${sb(p.EnvTelegram)}
+              ${siteb(p.Status)}
+              ${isUrg ? '<span class="badge b-urg">URGENTE</span>' : ''}
+              <span class="badge b-pau">${esc(p.Categoria || 'Geral')}</span>
+            </div>
+            <div class="inv-meta-grid">
+              <div class="inv-meta"><span class="inv-meta-l">Produto</span><span class="inv-meta-v">#${idShort}</span></div>
+              <div class="inv-meta"><span class="inv-meta-l">Data</span><span class="inv-meta-v">${data}</span></div>
+              <div class="inv-meta"><span class="inv-meta-l">Shop ID</span><span class="inv-meta-v">${shop}</span></div>
+              <div class="inv-meta"><span class="inv-meta-l">Item ID</span><span class="inv-meta-v">${item}</span></div>
+            </div>
+            <div class="inv-note">${comentario}</div>
+            <div class="inv-actions">
+              <button class="btn btn-green btn-sm" onclick="qSend('${p.ID}', this)">✈️ Enviar</button>
+              <button class="btn btn-ghost btn-sm ${isUrg ? 'ib-urg' : ''}" onclick="toggleUrgente('${p.ID}', this)">${isUrg ? '🔥 Urgente' : '🌡️ Urgente'}</button>
+              <button class="btn btn-ghost btn-sm btn-icon-soft" onclick="openEdit('${p.ID}')">✏️ Editar</button>
+              ${link}
+            </div>
+          </div>
+        </div>`;
       }).join('');
     }
 
@@ -2639,8 +2919,7 @@
       </div>
       <div class="hist-card-footer">
         <button class="btn btn-ghost btn-xs" onclick="qSend('${h.ID_Produto}')">🔄 Reenviar</button>
-        <button class="btn btn-ghost btn-xs" onclick="editarTelegram('${h.ID_Produto}', '${msgId}')">✏️ Editar</button>
-        <button class="btn btn-ghost btn-xs" onclick="apagarTelegram('${h.ID_Produto}', '${msgId}')">🗑️ Apagar</button>
+        <button class="btn btn-danger btn-xs" onclick="apagarTelegram('${h.ID_Produto}', '${msgId}')">🗑️ Excluir</button>
       </div>
     </div>`;
       }).join('');
@@ -2672,19 +2951,6 @@
           toast('Falha no envio (Bot retornou false)', 'err');
         }
       } catch (e) { toast(e.message, 'err'); } finally { if (btnEl) btnEl.disabled = false; }
-    }
-
-    // ══ CORRIGIDO: forcarCiclo agora dispara banner CRON via /disparar-cron ══
-    async function forcarCiclo() {
-      const btn = document.getElementById('btn-ciclo'), sp = document.getElementById('ciclo-sp');
-      btn.disabled = true; sp.classList.add('on');
-      try {
-        // Chama /disparar-cron sem cron_id = disparo de banner com template padrão
-        const j = await botFetch('/disparar-cron', {});
-        toast(j.status ? '⏰ Banner CRON disparado no Telegram!' : 'Falha no disparo do CRON.', j.status ? 'ok' : 'err');
-        addLog(`Forçar Banner CRON: ${j.status ? 'ok' : 'erro'}`, j.status ? 'ok' : 'err');
-      } catch (e) { toast(e.message, 'err'); addLog(`Erro forçar CRON: ${e.message}`, 'err'); }
-      finally { btn.disabled = false; sp.classList.remove('on'); }
     }
 
     // ══ NOVO: dispara um agendamento específico imediatamente ════════════════
@@ -2751,18 +3017,6 @@
           await apiPost({ action: 'apagar_historico', id_produto: cronId, message_id: msgId });
           toast('Banner apagado do canal!'); await loadHistorico();
         } catch (err) { toast('Erro ao limpar histórico.', 'err'); }
-      }
-    }
-
-    async function editarTelegram(id, msgId) {
-      if (!msgId) return toast('Sem message_id salvo.', 'warn');
-      const p = prods.find(x => x.ID === id); if (!p) return toast('Produto não achado.', 'err');
-      try {
-        const j = await botFetch('/editar-oferta', { message_id: msgId, titulo: p.Título || '', preco: fp(p.Preço) || '', categoria: p.Categoria || '', link: p.Link || '', imagem: p.Imagem || '' });
-        if (j.status) toast('Mensagem editada no Telegram!');
-      } catch (e) {
-        if (e.message.includes("is not modified")) toast('Nenhuma alteração detectada. (idêntico)', 'warn');
-        else toast(e.message, 'err');
       }
     }
 
