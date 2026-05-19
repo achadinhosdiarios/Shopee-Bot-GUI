@@ -1663,7 +1663,6 @@
 
       <div class="content">
 
-        <!-- ══ DASHBOARD ══════════════════════════════════════════════════════ -->
         <div class="panel active" id="p-inicio">
           <div class="stats">
             <div class="stat c-or">
@@ -1740,7 +1739,6 @@
                   <button class="btn btn-green btn-full" onclick="enviarProximo()" id="btn-prox" style="padding:13px">
                     🚀 Disparar 1º da Fila <div class="spin" id="prox-sp"></div>
                   </button>
-                  <!-- ✅ CORRIGIDO: agora dispara banner CRON, não produto da fila -->
                   <button class="btn btn-ghost btn-full" onclick="forcarCiclo()" id="btn-ciclo">
                     ⏰ Forçar Banner CRON <div class="spin dark" id="ciclo-sp"></div>
                   </button>
@@ -1754,7 +1752,6 @@
           </div>
         </div>
 
-        <!-- ══ INVENTÁRIO ═════════════════════════════════════════════════════ -->
         <div class="panel" id="p-produtos">
           <div class="sh">
             <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
@@ -1800,7 +1797,6 @@
           </div>
         </div>
 
-        <!-- ══ AUTOMAÇÃO ══════════════════════════════════════════════════════ -->
         <div class="panel" id="p-automacao">
           <div class="sh">
             <div>
@@ -1820,7 +1816,6 @@
           </div>
         </div>
 
-        <!-- ══ CANAL TELEGRAM ═════════════════════════════════════════════════ -->
         <div class="panel" id="p-historico">
           <div class="sh">
             <div>
@@ -1864,7 +1859,6 @@
           </div>
         </div>
 
-        <!-- ══ CONSOLE ════════════════════════════════════════════════════════ -->
         <div class="panel" id="p-atividade">
           <div style="display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start">
             <div>
@@ -1928,7 +1922,6 @@
           </div>
         </div>
 
-        <!-- ══ CONFIGURAÇÕES ══════════════════════════════════════════════════ -->
         <div class="panel" id="p-config">
           <div style="max-width:780px;display:flex;flex-direction:column;gap:24px">
             <div class="card">
@@ -1987,7 +1980,6 @@
     </div>
   </div>
 
-  <!-- ══ MODAL EDITAR PRODUTO ═══════════════════════════════════════════════ -->
   <div class="overlay" id="modal-edit">
     <div class="modal">
       <div class="mhead">
@@ -2048,7 +2040,6 @@
     </div>
   </div>
 
-  <!-- ══ MODAL CRON ═════════════════════════════════════════════════════════ -->
   <div class="overlay" id="modal-cron">
     <div class="modal" style="width: 540px">
       <div class="mhead">
@@ -2102,7 +2093,6 @@
     </div>
   </div>
 
-  <!-- ══ DRAWER DISPARO AVULSO ══════════════════════════════════════════════ -->
   <div class="drawer" id="drawer">
     <div class="dhead">
       <div class="dtitle">✈️ Disparo Avulso</div>
@@ -2155,6 +2145,10 @@
     // -- INFRA & UTILS --
     function getCfg() { try { return { ...DCFG, ...JSON.parse(localStorage.getItem(CK) || '{}') } } catch (e) { return DCFG } }
     function sCfg(c) { localStorage.setItem(CK, JSON.stringify(c)) }
+
+    function getCleanUrl(url) {
+      return url ? url.trim().replace(/\/+$/, '') : '';
+    }
 
     function toast(msg, type = 'ok') {
       const el = document.getElementById('toast'); if (!el) return;
@@ -2217,13 +2211,13 @@
       if (!c.botUrl) throw new Error("A URL do Bot não está configurada na aba de Configurações.");
       if (!c.botUrl.startsWith('http')) throw new Error("A URL do Bot deve começar com http:// ou https://");
 
-      const base = c.botUrl.replace(/\/$/, '');
+      const base = getCleanUrl(c.botUrl);
       try {
         const r = await fetchWithTimeout(`${base}${ep}`, {
           method,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...params, secret: c.secret }),
-          timeout: 25000,
+          timeout: 30000, 
         });
         if (!r.ok) {
           let detail = `HTTP ${r.status}`;
@@ -2236,8 +2230,8 @@
         return await r.json();
       } catch (err) {
         addLog(`Falha API Bot [${ep}]: ${err.message}`, 'err');
-        if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-          throw new Error("Erro de conexão (Failed to fetch). O bot na Discloud pode estar offline, hibernando ou a URL não usa HTTPS.");
+        if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('signal is aborted')) {
+          throw new Error("Erro de conexão (Timeout ou Failed to fetch). O bot na Discloud pode estar offline, hibernando ou processando lentamente.");
         }
         throw err;
       }
@@ -2763,7 +2757,8 @@
         results.push(`<div style="color:var(--green)">✅ Apps Script: OK (${j.produtos?.length || 0} itens)</div>`);
       } catch (e) { results.push(`<div style="color:var(--red)">❌ Apps Script: ${e.message}</div>`) }
       try {
-        const r = await fetchWithTimeout(`${c.botUrl}/ping`, { method: 'GET', redirect: 'follow', timeout: 8000 });
+        const botBase = getCleanUrl(c.botUrl);
+        const r = await fetchWithTimeout(`${botBase}/ping`, { method: 'GET', redirect: 'follow', timeout: 10000 });
         const j = await r.json();
         results.push(`<div style="color:var(--green)">✅ Bot Discloud: Online — ${j.hora || ''}</div>`);
       } catch (e) { results.push(`<div style="color:var(--red)">❌ Bot Discloud: ${e.message}</div>`) }
@@ -2785,7 +2780,8 @@
       const c = getCfg();
       if (!c.botUrl) return;
       try {
-        const r = await fetchWithTimeout(`${c.botUrl}/ping`, { method: 'GET', redirect: 'follow', timeout: 8000 });
+        const botBase = getCleanUrl(c.botUrl);
+        const r = await fetchWithTimeout(`${botBase}/ping`, { method: 'GET', redirect: 'follow', timeout: 10000 });
         if (r.ok || r.type === 'opaque') {
           document.getElementById('bot-pulse').className = 'pulse on';
           document.getElementById('bot-lbl').textContent = 'Bot Ativo';
@@ -2799,7 +2795,8 @@
     async function refreshStatus() {
       const c = getCfg(), sp = document.getElementById('st-sp'); sp.classList.add('on');
       try {
-        const r = await fetchWithTimeout(`${c.botUrl}/ping`, { method: 'GET', redirect: 'follow', timeout: 10000 });
+        const botBase = getCleanUrl(c.botUrl);
+        const r = await fetchWithTimeout(`${botBase}/ping`, { method: 'GET', redirect: 'follow', timeout: 10000 });
         const j = await r.json();
         document.getElementById('st-status').className = 'badge b-done'; document.getElementById('st-status').textContent = 'Online'; document.getElementById('st-hora').textContent = j.hora || '--:--';
         document.getElementById('sess-env').textContent = j.stats?.enviados || 0; document.getElementById('sess-err').textContent = j.stats?.erros || 0;
