@@ -1572,12 +1572,12 @@
             <input id="l-script" type="url" placeholder="https://script.google.com/macros/s/.../exec">
           </div>
           <div class="field">
-            <label>Hostname FastAPI (Discloud) *</label>
-            <input id="l-bot" type="url" placeholder="https://SEU-APP.discloud.app">
+            <label>Hostname FastAPI (Discloud) — opcional</label>
+            <input id="l-bot" type="url" placeholder="opcional — o painel usa Apps Script">
           </div>
           <div class="field">
-            <label>API Secret Token *</label>
-            <input id="l-secret" type="password" placeholder="Chave do bot…" autocomplete="off">
+            <label>API Secret Token — opcional</label>
+            <input id="l-secret" type="password" placeholder="opcional" autocomplete="off">
           </div>
           <div style="height:1px;background:var(--border);margin:18px 0"></div>
         </div>
@@ -1935,8 +1935,8 @@
                   <div class="hint">Responsável pelo CRUD na planilha.</div>
                 </div>
                 <div class="fg2 full">
-                  <label>Hostname FastAPI (Discloud) *</label>
-                  <input id="c-bot" type="url" placeholder="https://SEU-APP.discloud.app">
+                  <label>Hostname FastAPI (Discloud) — opcional</label>
+                  <input id="c-bot" type="url" placeholder="opcional — o painel usa Apps Script">
                   <div class="hint" style="color:var(--red)">Atenção: A URL deve começar obrigatoriamente com
                     <b>https://</b>
                   </div>
@@ -2233,47 +2233,38 @@
       const payload = { ...body, key: authTok || c.pass };
       const r = await fetchWithTimeout(c.scriptUrl, {
         method: 'POST',
-        mode: 'no-cors',
+        mode: 'cors',
+        credentials: 'omit',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload),
+        timeout: 45000,
       });
-      if (r.type === 'opaque') return { status: 'sucesso' };
-      return r.json();
+      const j = await readMaybeJson(r);
+      if (!r.ok || j.status === 'erro') throw new Error(j.mensagem || j.detail || j.raw || `Apps Script HTTP ${r.status}`);
+      return j;
     }
 
     async function botFetch(ep, params = {}, method = 'POST') {
-      const c = getCfg();
-      if (!c.botUrl) throw new Error("A URL do Bot não está configurada na aba de Configurações.");
-
-      const base = getCleanUrl(c.botUrl);
-      const url = `${base}${ep}`;
-      const payload = { ...params, secret: c.secret };
-      const init = {
-        method,
-        mode: 'cors',
-        credentials: 'omit',
-        headers: { 'Content-Type': 'application/json' },
-        timeout: 30000,
+      // Ponte v7: as ações do Telegram agora são executadas pelo Apps Script.
+      // Isso remove a dependência do domínio público da Discloud, que está retornando 404 verde.
+      const routeMap = {
+        '/enviar-oferta': 'telegram_enviar_oferta',
+        '/forcar-postagem': 'forcar_postagem',
+        '/disparar-cron': 'disparar_cron',
+        '/apagar-oferta': 'apagar_oferta',
+        '/editar-oferta': 'editar_oferta',
+        '/marcar-urgente': 'marcar_urgente',
+        '/atualizar-crons': 'atualizar_crons',
+        '/ping': 'ping'
       };
-
-      if (method !== 'GET') init.body = JSON.stringify(payload);
-
+      const action = routeMap[ep];
+      if (!action) throw new Error(`Rota interna desconhecida: ${ep}`);
       try {
-        const r = await fetchWithTimeout(url, init);
-        const data = await readMaybeJson(r);
-
-        if (!r.ok) {
-          const detail = Array.isArray(data.detail)
-            ? data.detail.map(e => `[${(e.loc || []).join('.')}] ${e.msg}`).join(' | ')
-            : (data.detail || data.mensagem || data.raw || `HTTP ${r.status}`);
-          throw new Error(detail);
-        }
-
-        return data;
+        if (method === 'GET' || ep === '/ping') return await apiGet({ action });
+        return await apiPost({ action, ...params });
       } catch (err) {
-        const friendly = networkErrorMessage(err, url);
-        addLog(`Falha API Bot [${ep}]: ${friendly}`, 'err');
-        throw new Error(friendly);
+        addLog(`Falha ponte Telegram [${ep}]: ${err.message}`, 'err');
+        throw err;
       }
     }
 
@@ -2666,11 +2657,11 @@ function driveUrl(idOrUrl) {
           imagem: p.Imagem || '',
           preco: fp(p.Preço) || '',
           categoria: p.Categoria || '',
-          urgente: isUrg
+          urgente: isUrg,
+          id_produto: p.ID
         });
         if (j.status) {
           toast(isUrg ? '🔥 Oferta URGENTE enviada!' : 'Enviado com sucesso!');
-          await apiPost({ action: 'registrar_postagem', id_produto: p.ID, message_id: String(j.message_id || ''), status: 'sucesso' });
           await loadAll();
         } else {
           toast('Falha no envio (Bot retornou false)', 'err');
@@ -2805,23 +2796,19 @@ function driveUrl(idOrUrl) {
       }
 
       try {
-        const botBase = getCleanUrl(c.botUrl);
-        const url = `${botBase}/ping`;
-        const r = await fetchWithTimeout(url, { method: 'GET', mode: 'cors', credentials: 'omit', timeout: 30000 });
-        const j = await readMaybeJson(r);
-        if (!r.ok) throw new Error(j.detail || j.raw || `HTTP ${r.status}`);
-
-        const cfg = j.config || {};
+        const j = await apiGet({ action: 'telegram_health' });
         const missing = [];
-        if (cfg.bot_loaded === false) missing.push('BOT_TOKEN');
-        if (cfg.group_id === false) missing.push('ID_DO_GRUPO');
-        if (cfg.apps_script_url === false) missing.push('APPS_SCRIPT_URL');
-        if (cfg.api_secret === false) missing.push('API_SECRET');
-
-        results.push(`<div style="color:var(--green)">✅ Bot Discloud: Online — ${esc(j.hora || '')}</div>`);
-        if (missing.length) results.push(`<div style="color:var(--yellow)">⚠️ Configuração incompleta: ${esc(missing.join(', '))}</div>`);
+        if (!j.bot_token) missing.push('BOT_TOKEN');
+        if (!j.group_id) missing.push('ID_DO_GRUPO');
+        if (!j.link_site) missing.push('LINK_SITE');
+        if (missing.length) {
+          results.push(`<div style="color:var(--yellow)">⚠️ Telegram via Apps Script: faltando ${esc(missing.join(', '))}</div>`);
+        } else {
+          results.push(`<div style="color:var(--green)">✅ Telegram via Apps Script: configurado</div>`);
+        }
+        results.push(`<div style="color:var(--yellow)">ℹ️ Discloud público está desativado neste painel; o envio passa pelo Apps Script.</div>`);
       } catch (e) {
-        results.push(`<div style="color:var(--red)">❌ Bot Discloud: ${esc(e.message)}</div>`);
+        results.push(`<div style="color:var(--red)">❌ Telegram via Apps Script: ${esc(e.message)}</div>`);
       }
 
       res.innerHTML = `<div style="padding:18px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);display:flex;flex-direction:column;gap:10px;font-size:13px;font-weight:700">${results.join('')}</div>`;
@@ -2840,21 +2827,15 @@ function driveUrl(idOrUrl) {
     }
 
     async function checkBot() {
-      const c = getCfg();
-      if (!c.botUrl) return;
-
       try {
-        const botBase = getCleanUrl(c.botUrl);
-        const r = await fetchWithTimeout(`${botBase}/ping`, { method: 'GET', mode: 'cors', credentials: 'omit', timeout: 10000 });
-        const j = await readMaybeJson(r);
-        if (!r.ok) throw new Error(j.detail || `HTTP ${r.status}`);
-
+        const j = await apiGet({ action: 'telegram_health' });
+        if (!j.bot_token || !j.group_id) throw new Error('BOT_TOKEN ou ID_DO_GRUPO ausente no Apps Script.');
         document.getElementById('bot-pulse').className = 'pulse on';
-        document.getElementById('bot-lbl').textContent = 'Bot Ativo';
+        document.getElementById('bot-lbl').textContent = 'Telegram OK';
       } catch (e) {
         document.getElementById('bot-pulse').className = 'pulse err';
-        document.getElementById('bot-lbl').textContent = 'Bot Offline';
-        addLog(`Ping falhou: ${e.message}`, 'err');
+        document.getElementById('bot-lbl').textContent = 'Config incompleta';
+        addLog(`Telegram via Apps Script falhou: ${e.message}`, 'err');
       }
     }
 
