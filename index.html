@@ -2125,7 +2125,7 @@
 
   <script>
     const CK = 'acd_cfg_v5';
-    const DCFG = { scriptUrl: '', botUrl: 'https://achadinhosbot.discloud.app', email: '', pass: '', secret: '', grupo: '', site: '' };
+    const DCFG = { scriptUrl: 'https://script.google.com/macros/s/AKfycbwO7BQje-TFZ1IXTwAk69PR8kAe74hHb2KV4jY-iNLAUzv-cAbDO0aHiItO9goLMENnfw/exec', botUrl: 'https://achadinhosbot.discloud.app', email: '', pass: '', secret: '', grupo: '', site: 'https://achadinhosdiarios.github.io/Browse/' };
     const PANEL_META = {
       inicio: { title: 'Dashboard Analítico', icon: '🏠' },
       produtos: { title: 'Gestão de Inventário', icon: '📦' },
@@ -2168,7 +2168,7 @@
       const msg = String(err?.message || err || '');
       if (err?.name === 'AbortError' || msg.includes('aborted')) return 'Timeout: o servidor demorou para responder.';
       if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
-        return `Falha de rede/CORS ao acessar ${sameOriginHint(url)}. Verifique se o bot está online e se o backend está enviando Access-Control-Allow-Origin.`;
+        return `Falha de rede/CORS ao acessar ${sameOriginHint(url)}. Abra ${sameOriginHint(url)}/ping no navegador: se aparecer 404 da Discloud, o subdomínio não está roteando para o FastAPI; se aparecer JSON, confira CORS/secret.`;
       }
       return msg;
     }
