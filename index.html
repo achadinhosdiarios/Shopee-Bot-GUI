@@ -1942,7 +1942,8 @@
                   <label>Hostname FastAPI (Discloud) *</label>
                   <input id="c-bot" type="url" placeholder="https://SEU-APP.discloud.app">
                   <div class="hint" style="color:var(--red)">Atenção: A URL deve começar obrigatoriamente com
-                    <b>https://</b></div>
+                    <b>https://</b>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2149,8 +2150,45 @@
     initTheme();
 
     // -- INFRA & UTILS --
-    function getCfg() { try { return { ...DCFG, ...JSON.parse(localStorage.getItem(CK) || '{}') } } catch (e) { return DCFG } }
-    function sCfg(c) { localStorage.setItem(CK, JSON.stringify(c)) }
+    function normalizeBotUrl(value) {
+      const raw = String(value || '').trim().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\/+$/, '');
+      if (!raw) return '';
+      if (!/^https:\/\//i.test(raw)) {
+        throw new Error('A URL do Bot deve começar obrigatoriamente com https://');
+      }
+      return raw;
+    }
+
+    function getCfg() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(CK) || '{}');
+        return { ...DCFG, ...saved };
+      } catch (e) {
+        return DCFG;
+      }
+    }
+
+    function sCfg(c) {
+      const clean = { ...c };
+      if (clean.botUrl) clean.botUrl = normalizeBotUrl(clean.botUrl);
+      localStorage.setItem(CK, JSON.stringify(clean));
+    }
+
+    function getBotBaseUrl() {
+      const c = getCfg();
+      if (!c.botUrl) throw new Error('A URL do Bot não está configurada na aba de Configurações.');
+      return normalizeBotUrl(c.botUrl);
+    }
+
+    function describeFetchError(err) {
+      if (err?.name === 'AbortError') {
+        return 'Tempo esgotado. O bot pode estar offline ou hibernando na Discloud.';
+      }
+      if ((err?.message || '').includes('Failed to fetch') || (err?.message || '').includes('NetworkError')) {
+        return 'Erro de conexão (Failed to fetch). Verifique se a URL usa https://, se o app está Running na Discloud e se o CORS foi publicado no redeploy.';
+      }
+      return err?.message || String(err);
+    }
 
     function toast(msg, type = 'ok') {
       const el = document.getElementById('toast'); if (!el) return;
@@ -2178,9 +2216,11 @@
       const { timeout = 20000, ...fetchOptions } = options;
       const ctrl = new AbortController();
       const id = setTimeout(() => ctrl.abort(), timeout);
-      const res = await fetch(resource, { redirect: 'follow', ...fetchOptions, signal: ctrl.signal });
-      clearTimeout(id);
-      return res;
+      try {
+        return await fetch(resource, { redirect: 'follow', ...fetchOptions, signal: ctrl.signal });
+      } finally {
+        clearTimeout(id);
+      }
     }
 
     // -- COMUNICAÇÃO API --
@@ -2210,10 +2250,8 @@
 
     async function botFetch(ep, params = {}, method = 'POST') {
       const c = getCfg();
-      if (!c.botUrl) throw new Error("A URL do Bot não está configurada na aba de Configurações.");
-      if (!c.botUrl.startsWith('http')) throw new Error("A URL do Bot deve começar com http:// ou https://");
+      const base = getBotBaseUrl();
 
-      const base = c.botUrl.replace(/\/$/, '');
       try {
         const r = await fetchWithTimeout(`${base}${ep}`, {
           method,
@@ -2231,11 +2269,9 @@
         }
         return await r.json();
       } catch (err) {
-        addLog(`Falha API Bot [${ep}]: ${err.message}`, 'err');
-        if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-          throw new Error("Erro de conexão (Failed to fetch). O bot na Discloud pode estar offline, hibernando ou a URL não usa HTTPS.");
-        }
-        throw err;
+        const detail = describeFetchError(err);
+        addLog(`Falha API Bot [${ep}]: ${detail}`, 'err');
+        throw new Error(detail);
       }
     }
 
@@ -2248,8 +2284,14 @@
       const setupVisible = document.getElementById('l-setup').style.display !== 'none';
       if (setupVisible) {
         const scriptUrl = document.getElementById('l-script').value.trim();
-        const botUrl = document.getElementById('l-bot').value.trim().replace(/\/$/, '');
+        const rawBotUrl = document.getElementById('l-bot').value;
         const secret = document.getElementById('l-secret').value;
+        let botUrl = '';
+        try { botUrl = rawBotUrl ? normalizeBotUrl(rawBotUrl) : ''; }
+        catch (e) {
+          er.textContent = e.message; er.style.display = 'block';
+          sp.classList.remove('on'); btn.disabled = false; return;
+        }
         if (!scriptUrl || !em || !pw) {
           er.textContent = 'Preencha a URL do Apps Script, e-mail e senha.'; er.style.display = 'block';
           sp.classList.remove('on'); btn.disabled = false; return;
@@ -2741,7 +2783,23 @@
 
     // -- CONFIGS & DRAWER MANUAL --
     function loadCfgUI() { const c = getCfg(); document.getElementById('c-sc').value = c.scriptUrl; document.getElementById('c-bot').value = c.botUrl; document.getElementById('c-em').value = c.email; document.getElementById('c-pw').value = c.pass; document.getElementById('c-sec').value = c.secret; document.getElementById('c-grp').value = c.grupo; document.getElementById('c-sit').value = c.site; }
-    function saveConf() { sCfg({ scriptUrl: document.getElementById('c-sc').value.trim(), botUrl: document.getElementById('c-bot').value.trim().replace(/\/$/, ''), email: document.getElementById('c-em').value.trim(), pass: document.getElementById('c-pw').value, secret: document.getElementById('c-sec').value, grupo: document.getElementById('c-grp').value.trim(), site: document.getElementById('c-sit').value.trim() }); toast('Configurações gravadas!'); }
+    function saveConf() {
+      try {
+        sCfg({
+          scriptUrl: document.getElementById('c-sc').value.trim(),
+          botUrl: document.getElementById('c-bot').value,
+          email: document.getElementById('c-em').value.trim(),
+          pass: document.getElementById('c-pw').value,
+          secret: document.getElementById('c-sec').value,
+          grupo: document.getElementById('c-grp').value.trim(),
+          site: document.getElementById('c-sit').value.trim()
+        });
+        loadCfgUI();
+        toast('Configurações gravadas!');
+      } catch (e) {
+        toast(e.message, 'err');
+      }
+    }
 
     async function testConn() {
       const c = getCfg(), sp = document.getElementById('test-sp'), res = document.getElementById('test-result');
@@ -2750,12 +2808,13 @@
         const r = await fetchWithTimeout(`${c.scriptUrl}?key=${encodeURIComponent(authTok || c.pass)}&action=listar`);
         const j = await r.json();
         results.push(`<div style="color:var(--green)">✅ Apps Script: OK (${j.produtos?.length || 0} itens)</div>`);
-      } catch (e) { results.push(`<div style="color:var(--red)">❌ Apps Script: ${e.message}</div>`) }
+      } catch (e) { results.push(`<div style="color:var(--red)">❌ Apps Script: ${describeFetchError(e)}</div>`) }
       try {
-        const r = await fetchWithTimeout(`${c.botUrl}/ping`, { method: 'GET', redirect: 'follow', timeout: 8000 });
+        const base = getBotBaseUrl();
+        const r = await fetchWithTimeout(`${base}/ping`, { method: 'GET', redirect: 'follow', timeout: 8000 });
         const j = await r.json();
         results.push(`<div style="color:var(--green)">✅ Bot Discloud: Online — ${j.hora || ''}</div>`);
-      } catch (e) { results.push(`<div style="color:var(--red)">❌ Bot Discloud: ${e.message}</div>`) }
+      } catch (e) { results.push(`<div style="color:var(--red)">❌ Bot Discloud: ${describeFetchError(e)}</div>`) }
       res.innerHTML = `<div style="padding:18px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);display:flex;flex-direction:column;gap:10px;font-size:13px;font-weight:700">${results.join('')}</div>`;
       sp.classList.remove('on'); res.style.display = 'block';
     }
@@ -2774,7 +2833,8 @@
       const c = getCfg();
       if (!c.botUrl) return;
       try {
-        const r = await fetchWithTimeout(`${c.botUrl}/ping`, { method: 'GET', redirect: 'follow', timeout: 8000 });
+        const base = getBotBaseUrl();
+        const r = await fetchWithTimeout(`${base}/ping`, { method: 'GET', redirect: 'follow', timeout: 8000 });
         if (r.ok || r.type === 'opaque') {
           document.getElementById('bot-pulse').className = 'pulse on';
           document.getElementById('bot-lbl').textContent = 'Bot Ativo';
@@ -2782,13 +2842,15 @@
       } catch (e) {
         document.getElementById('bot-pulse').className = 'pulse err';
         document.getElementById('bot-lbl').textContent = 'Bot Offline';
+        addLog(`Ping falhou: ${describeFetchError(e)}`, 'err');
       }
     }
 
     async function refreshStatus() {
-      const c = getCfg(), sp = document.getElementById('st-sp'); sp.classList.add('on');
+      const sp = document.getElementById('st-sp'); sp.classList.add('on');
       try {
-        const r = await fetchWithTimeout(`${c.botUrl}/ping`, { method: 'GET', redirect: 'follow', timeout: 10000 });
+        const base = getBotBaseUrl();
+        const r = await fetchWithTimeout(`${base}/ping`, { method: 'GET', redirect: 'follow', timeout: 10000 });
         const j = await r.json();
         document.getElementById('st-status').className = 'badge b-done'; document.getElementById('st-status').textContent = 'Online'; document.getElementById('st-hora').textContent = j.hora || '--:--';
         document.getElementById('sess-env').textContent = j.stats?.enviados || 0; document.getElementById('sess-err').textContent = j.stats?.erros || 0;
@@ -2797,7 +2859,7 @@
       } catch (e) {
         document.getElementById('st-status').className = 'badge b-no';
         document.getElementById('st-status').textContent = 'Offline';
-        addLog(`Ping falhou: ${e.message}`, 'err');
+        addLog(`Ping falhou: ${describeFetchError(e)}`, 'err');
       } finally { sp.classList.remove('on') }
     }
 
