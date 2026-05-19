@@ -1572,12 +1572,12 @@
             <input id="l-script" type="url" placeholder="https://script.google.com/macros/s/.../exec">
           </div>
           <div class="field">
-            <label>Hostname FastAPI (Discloud) — opcional</label>
-            <input id="l-bot" type="url" placeholder="opcional — o painel usa Apps Script">
+            <label>Hostname FastAPI (Discloud) *</label>
+            <input id="l-bot" type="url" placeholder="https://SEU-APP.discloud.app">
           </div>
           <div class="field">
-            <label>API Secret Token — opcional</label>
-            <input id="l-secret" type="password" placeholder="opcional" autocomplete="off">
+            <label>API Secret Token *</label>
+            <input id="l-secret" type="password" placeholder="Chave do bot…" autocomplete="off">
           </div>
           <div style="height:1px;background:var(--border);margin:18px 0"></div>
         </div>
@@ -1606,7 +1606,7 @@
         <div class="sb-mark">🛍</div>
         <div>
           <div class="sb-name">Achadinhos</div>
-          <div class="sb-ver">Admin v6.2</div>
+          <div class="sb-ver">Admin v5.6</div>
         </div>
       </div>
       <nav>
@@ -1663,6 +1663,7 @@
 
       <div class="content">
 
+        <!-- ══ DASHBOARD ══════════════════════════════════════════════════════ -->
         <div class="panel active" id="p-inicio">
           <div class="stats">
             <div class="stat c-or">
@@ -1739,6 +1740,7 @@
                   <button class="btn btn-green btn-full" onclick="enviarProximo()" id="btn-prox" style="padding:13px">
                     🚀 Disparar 1º da Fila <div class="spin" id="prox-sp"></div>
                   </button>
+                  <!-- ✅ CORRIGIDO: agora dispara banner CRON, não produto da fila -->
                   <button class="btn btn-ghost btn-full" onclick="forcarCiclo()" id="btn-ciclo">
                     ⏰ Forçar Banner CRON <div class="spin dark" id="ciclo-sp"></div>
                   </button>
@@ -1752,6 +1754,7 @@
           </div>
         </div>
 
+        <!-- ══ INVENTÁRIO ═════════════════════════════════════════════════════ -->
         <div class="panel" id="p-produtos">
           <div class="sh">
             <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
@@ -1797,6 +1800,7 @@
           </div>
         </div>
 
+        <!-- ══ AUTOMAÇÃO ══════════════════════════════════════════════════════ -->
         <div class="panel" id="p-automacao">
           <div class="sh">
             <div>
@@ -1816,6 +1820,7 @@
           </div>
         </div>
 
+        <!-- ══ CANAL TELEGRAM ═════════════════════════════════════════════════ -->
         <div class="panel" id="p-historico">
           <div class="sh">
             <div>
@@ -1859,6 +1864,7 @@
           </div>
         </div>
 
+        <!-- ══ CONSOLE ════════════════════════════════════════════════════════ -->
         <div class="panel" id="p-atividade">
           <div style="display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start">
             <div>
@@ -1922,6 +1928,7 @@
           </div>
         </div>
 
+        <!-- ══ CONFIGURAÇÕES ══════════════════════════════════════════════════ -->
         <div class="panel" id="p-config">
           <div style="max-width:780px;display:flex;flex-direction:column;gap:24px">
             <div class="card">
@@ -1935,8 +1942,8 @@
                   <div class="hint">Responsável pelo CRUD na planilha.</div>
                 </div>
                 <div class="fg2 full">
-                  <label>Hostname FastAPI (Discloud) — opcional</label>
-                  <input id="c-bot" type="url" placeholder="opcional — o painel usa Apps Script">
+                  <label>Hostname FastAPI (Discloud) *</label>
+                  <input id="c-bot" type="url" placeholder="https://SEU-APP.discloud.app">
                   <div class="hint" style="color:var(--red)">Atenção: A URL deve começar obrigatoriamente com
                     <b>https://</b>
                   </div>
@@ -1980,6 +1987,7 @@
     </div>
   </div>
 
+  <!-- ══ MODAL EDITAR PRODUTO ═══════════════════════════════════════════════ -->
   <div class="overlay" id="modal-edit">
     <div class="modal">
       <div class="mhead">
@@ -2040,6 +2048,7 @@
     </div>
   </div>
 
+  <!-- ══ MODAL CRON ═════════════════════════════════════════════════════════ -->
   <div class="overlay" id="modal-cron">
     <div class="modal" style="width: 540px">
       <div class="mhead">
@@ -2093,6 +2102,7 @@
     </div>
   </div>
 
+  <!-- ══ DRAWER DISPARO AVULSO ══════════════════════════════════════════════ -->
   <div class="drawer" id="drawer">
     <div class="dhead">
       <div class="dtitle">✈️ Disparo Avulso</div>
@@ -2125,7 +2135,20 @@
 
   <script>
     const CK = 'acd_cfg_v5';
-    const DCFG = { scriptUrl: 'https://script.google.com/macros/s/AKfycbwO7BQje-TFZ1IXTwAk69PR8kAe74hHb2KV4jY-iNLAUzv-cAbDO0aHiItO9goLMENnfw/exec', botUrl: 'https://achadinhosbot.discloud.app', email: '', pass: '', secret: '', grupo: '', site: 'https://achadinhosdiarios.github.io/Browse/' };
+    const ADMIN_EMAIL = "antoniotristaoneto2007@gmail.com";
+    const ADMIN_PASS = "netinho2007";
+    const DEFAULT_BOT_URL = "https://achadinhosbot.discloud.app";
+    const DCFG = {
+      scriptUrl: "https://script.google.com/macros/s/AKfycbwO7BQje-TFZ1IXTwAk69PR8kAe74hHb2KV4jY-iNLAUzv-cAbDO0aHiItO9goLMENnfw/exec",
+      botUrl: DEFAULT_BOT_URL,
+      email: ADMIN_EMAIL,
+      pass: ADMIN_PASS,
+      secret: "netinho2007",
+      grupo: "-1003907414385",
+      site: "https://achadinhosdiarios.github.io/Browse/",
+      linkGrupo: "https://t.me/achadinh0sdiari0s",
+      linktree: "https://linktr.ee/achadinh0s.sh0pee"
+    };
     const PANEL_META = {
       inicio: { title: 'Dashboard Analítico', icon: '🏠' },
       produtos: { title: 'Gestão de Inventário', icon: '📦' },
@@ -2145,33 +2168,6 @@
     // -- INFRA & UTILS --
     function getCfg() { try { return { ...DCFG, ...JSON.parse(localStorage.getItem(CK) || '{}') } } catch (e) { return DCFG } }
     function sCfg(c) { localStorage.setItem(CK, JSON.stringify(c)) }
-
-    function getCleanUrl(url) {
-      const raw = String(url || '').trim();
-      if (!raw) return '';
-      const withProtocol = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
-      return withProtocol.replace(/\/+$/, '');
-    }
-
-    function sameOriginHint(url) {
-      try { return new URL(url).origin; } catch (_) { return url || 'URL inválida'; }
-    }
-
-    async function readMaybeJson(res) {
-      const txt = await res.text();
-      if (!txt) return {};
-      try { return JSON.parse(txt); }
-      catch (_) { return { raw: txt }; }
-    }
-
-    function networkErrorMessage(err, url = '') {
-      const msg = String(err?.message || err || '');
-      if (err?.name === 'AbortError' || msg.includes('aborted')) return 'Timeout: o servidor demorou para responder.';
-      if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
-        return `Falha de rede/CORS ao acessar ${sameOriginHint(url)}. Abra ${sameOriginHint(url)}/ping no navegador: se aparecer 404 da Discloud, o subdomínio não está roteando para o FastAPI; se aparecer JSON, confira CORS/secret.`;
-      }
-      return msg;
-    }
 
     function toast(msg, type = 'ok') {
       const el = document.getElementById('toast'); if (!el) return;
@@ -2199,19 +2195,9 @@
       const { timeout = 20000, ...fetchOptions } = options;
       const ctrl = new AbortController();
       const id = setTimeout(() => ctrl.abort(), timeout);
-
-      try {
-        return await fetch(resource, {
-          redirect: 'follow',
-          cache: 'no-store',
-          ...fetchOptions,
-          signal: ctrl.signal
-        });
-      } catch (err) {
-        throw new Error(networkErrorMessage(err, String(resource)));
-      } finally {
-        clearTimeout(id);
-      }
+      const res = await fetch(resource, { redirect: 'follow', ...fetchOptions, signal: ctrl.signal });
+      clearTimeout(id);
+      return res;
     }
 
     // -- COMUNICAÇÃO API --
@@ -2221,10 +2207,8 @@
       const u = new URL(c.scriptUrl);
       u.searchParams.set('key', authTok || c.pass);
       Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
-      const r = await fetchWithTimeout(u.toString(), { method: 'GET' });
-      const j = await readMaybeJson(r);
-      if (!r.ok) throw new Error(j.mensagem || j.detail || `Apps Script HTTP ${r.status}`);
-      return j;
+      const r = await fetchWithTimeout(u.toString());
+      return r.json();
     }
 
     async function apiPost(body) {
@@ -2233,174 +2217,104 @@
       const payload = { ...body, key: authTok || c.pass };
       const r = await fetchWithTimeout(c.scriptUrl, {
         method: 'POST',
-        mode: 'cors',
-        credentials: 'omit',
+        mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload),
-        timeout: 45000,
       });
-      const j = await readMaybeJson(r);
-      if (!r.ok || j.status === 'erro') throw new Error(j.mensagem || j.detail || j.raw || `Apps Script HTTP ${r.status}`);
-      return j;
+      if (r.type === 'opaque') return { status: 'sucesso' };
+      return r.json();
     }
 
     async function botFetch(ep, params = {}, method = 'POST') {
-      // Ponte v7: as ações do Telegram agora são executadas pelo Apps Script.
-      // Isso remove a dependência do domínio público da Discloud, que está retornando 404 verde.
-      const routeMap = {
-        '/enviar-oferta': 'telegram_enviar_oferta',
-        '/forcar-postagem': 'forcar_postagem',
-        '/disparar-cron': 'disparar_cron',
-        '/apagar-oferta': 'apagar_oferta',
-        '/editar-oferta': 'editar_oferta',
-        '/marcar-urgente': 'marcar_urgente',
-        '/atualizar-crons': 'atualizar_crons',
-        '/ping': 'ping'
-      };
-      const action = routeMap[ep];
-      if (!action) throw new Error(`Rota interna desconhecida: ${ep}`);
+      const c = getCfg();
+      if (!c.botUrl) throw new Error("A URL do Bot não está configurada na aba de Configurações.");
+      if (!c.botUrl.startsWith('http')) throw new Error("A URL do Bot deve começar com http:// ou https://");
+
+      const base = c.botUrl.replace(/\/$/, '');
       try {
-        if (method === 'GET' || ep === '/ping') return await apiGet({ action });
-        return await apiPost({ action, ...params });
+        const r = await fetchWithTimeout(`${base}${ep}`, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...params, secret: c.secret }),
+          timeout: 25000,
+        });
+        if (!r.ok) {
+          let detail = `HTTP ${r.status}`;
+          try {
+            const ed = await r.json();
+            detail = Array.isArray(ed.detail) ? ed.detail.map(e => `[${(e.loc || []).join('.')}] ${e.msg}`).join(' | ') : (ed.detail || detail);
+          } catch (e) { }
+          throw new Error(detail);
+        }
+        return await r.json();
       } catch (err) {
-        addLog(`Falha ponte Telegram [${ep}]: ${err.message}`, 'err');
+        addLog(`Falha API Bot [${ep}]: ${err.message}`, 'err');
+        if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+          throw new Error("Erro de conexão (Failed to fetch). O bot na Discloud pode estar offline, hibernando ou a URL não usa HTTPS.");
+        }
         throw err;
       }
     }
 
     // -- AUTH & INICIALIZAÇÃO --
-    function showLoginSetup(message = '') {
-      const cfg = getCfg();
-      const setup = document.getElementById('l-setup');
-      setup.style.display = 'block';
-      document.getElementById('l-title').textContent = 'Configuração inicial';
-      document.getElementById('l-sub').textContent = message || 'Preencha os dados do projeto para começar.';
-
-      const scriptInput = document.getElementById('l-script');
-      const botInput = document.getElementById('l-bot');
-      const secretInput = document.getElementById('l-secret');
-
-      if (scriptInput && !scriptInput.value) scriptInput.value = cfg.scriptUrl || DCFG.scriptUrl || '';
-      if (botInput && !botInput.value) botInput.value = cfg.botUrl || DCFG.botUrl || '';
-      if (secretInput && !secretInput.value) secretInput.value = cfg.secret || '';
-    }
-
-    function resetPanelConfig() {
-      localStorage.removeItem(CK);
-      localStorage.removeItem('acd_auth_v5');
-      authTok = null;
-
-      document.getElementById('l-email').value = '';
-      document.getElementById('l-pass').value = '';
-      document.getElementById('login-screen').style.cssText = 'display:flex;opacity:1';
-      document.getElementById('app').style.display = 'none';
-
-      showLoginSetup('Configuração local apagada. Preencha novamente a URL do Apps Script, e-mail e senha.');
-      const er = document.getElementById('l-err');
-      er.textContent = 'Configuração local apagada. Cadastre novamente o acesso neste navegador.';
-      er.style.display = 'block';
-    }
-
     async function doLogin() {
-      const em = document.getElementById('l-email').value.trim();
+      const em = document.getElementById('l-email').value.trim().toLowerCase();
       const pw = document.getElementById('l-pass').value;
-      const sp = document.getElementById('l-spin');
-      const er = document.getElementById('l-err');
-      const btn = document.getElementById('btn-login');
-
-      er.style.display = 'none';
-      sp.classList.add('on');
-      btn.disabled = true;
-
-      let logged = false;
+      const sp = document.getElementById('l-spin'), er = document.getElementById('l-err'), btn = document.getElementById('btn-login');
+      er.style.display = 'none'; sp.classList.add('on'); btn.disabled = true;
 
       try {
+        // Mantém endpoints e secrets pré-preenchidos pelo .env, mas NÃO aceita credenciais digitadas como configuração.
         const setupVisible = document.getElementById('l-setup').style.display !== 'none';
-        let cfg = getCfg();
-
         if (setupVisible) {
-          const scriptUrl = document.getElementById('l-script').value.trim();
-          const botUrl = getCleanUrl(document.getElementById('l-bot').value);
-          const secret = document.getElementById('l-secret').value;
+          const scriptUrl = document.getElementById('l-script').value.trim() || DCFG.scriptUrl;
+          const botUrl = (document.getElementById('l-bot').value.trim() || DCFG.botUrl).replace(/\/$/, '');
+          const secret = document.getElementById('l-secret').value || DCFG.secret;
+          sCfg({ ...getCfg(), scriptUrl, botUrl, secret, email: ADMIN_EMAIL, pass: ADMIN_PASS });
+        } else {
+          // Repara instalações antigas nas quais email/senha foram salvos incorretamente no localStorage.
+          const cfgAtual = getCfg();
+          sCfg({ ...cfgAtual, email: ADMIN_EMAIL, pass: ADMIN_PASS, secret: cfgAtual.secret || DCFG.secret });
+        }
 
-          if (!scriptUrl || !em || !pw) {
-            er.textContent = 'Preencha a URL do Apps Script, e-mail e senha.';
-            er.style.display = 'block';
-            return;
-          }
+        const cfg = getCfg();
+        if (!cfg.scriptUrl) throw new Error('Configure a URL do Apps Script antes de logar.');
+        if (!cfg.botUrl) throw new Error('Configure a URL do Bot antes de logar.');
 
-          sCfg({
-            ...cfg,
-            scriptUrl,
-            botUrl,
-            email: em,
-            pass: pw,
-            secret,
-            site: cfg.site || DCFG.site || ''
+        if (em !== ADMIN_EMAIL || pw !== ADMIN_PASS) {
+          throw new Error('Credenciais inválidas. Use o e-mail e senha oficiais do painel.');
+        }
+
+        // Login local do painel. A proteção real das ações fica no API_SECRET enviado ao FastAPI.
+        // Também avisa o Apps Script, quando disponível, sem depender da resposta opaque do no-cors.
+        try {
+          await fetchWithTimeout(cfg.scriptUrl, {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'login', email: em, password: pw, key: cfg.pass }),
+            timeout: 8000,
           });
-          cfg = getCfg();
-        }
+        } catch (_) { }
 
-        if (!cfg.scriptUrl) {
-          showLoginSetup('Informe a URL do Apps Script antes de entrar.');
-          er.textContent = 'Configure a URL do Apps Script antes de logar.';
-          er.style.display = 'block';
-          return;
-        }
-
-        if (!cfg.email || !cfg.pass) {
-          showLoginSetup('Este navegador ainda não tem e-mail/senha salvos. Faça a configuração inicial.');
-          er.textContent = 'Faça a configuração inicial neste navegador.';
-          er.style.display = 'block';
-          return;
-        }
-
-        if (em === cfg.email && pw === cfg.pass && em) {
-          // Apps Script Web App frequentemente não permite ler resposta POST por CORS.
-          // Por isso o painel usa a credencial local salva como token e valida as ações seguintes pela chave.
-          try {
-            await fetchWithTimeout(cfg.scriptUrl, {
-              method: 'POST',
-              mode: 'no-cors',
-              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-              body: JSON.stringify({ action: 'login', email: em, password: pw, key: cfg.pass }),
-              timeout: 15000,
-            });
-          } catch (_) { }
-
-          authTok = cfg.pass;
-          localStorage.setItem('acd_auth_v5', authTok);
-          logged = true;
-          boot();
-          return;
-        }
-
-        er.innerHTML = 'Credenciais inválidas para este navegador. Se você alterou a senha ou trocou de computador, <button type="button" onclick="resetPanelConfig()" style="margin-left:6px;padding:4px 8px;border-radius:6px;border:1px solid currentColor;background:transparent;color:inherit;font-weight:800;cursor:pointer">resetar configuração</button>';
+        authTok = ADMIN_PASS;
+        localStorage.setItem('acd_auth_v5', authTok);
+        boot();
+      } catch (e) {
+        er.textContent = e.message || 'Credenciais inválidas.';
         er.style.display = 'block';
       } finally {
-        if (!logged) {
-          sp.classList.remove('on');
-          btn.disabled = false;
-        }
+        sp.classList.remove('on'); btn.disabled = false;
       }
     }
 
-    function doLogout() {
-      authTok = null;
-      localStorage.removeItem('acd_auth_v5');
-      document.getElementById('login-screen').style.cssText = 'display:flex;opacity:1';
-      document.getElementById('app').style.display = 'none';
-    }
+    function doLogout() { authTok = null; localStorage.removeItem('acd_auth_v5'); document.getElementById('login-screen').style.cssText = 'display:flex;opacity:1'; document.getElementById('app').style.display = 'none'; }
 
     function boot() {
       document.getElementById('login-screen').style.opacity = '0';
       setTimeout(() => {
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app').style.display = 'flex';
-        loadCfgUI();
-        addLog('Sistema inicializado.', 'ok');
-        loadAll();
-        checkBot();
+        document.getElementById('login-screen').style.display = 'none'; document.getElementById('app').style.display = 'flex';
+        loadCfgUI(); addLog('Sistema inicializado.', 'ok');
+        loadAll(); checkBot();
       }, 380);
     }
 
@@ -2619,12 +2533,11 @@
       document.getElementById('modal-cron').classList.add('open');
     }
 
-function driveUrl(idOrUrl) {
+    function driveUrl(idOrUrl) {
       if (!idOrUrl) return '';
       const s = idOrUrl.trim();
       if (s.startsWith('http')) return s;
-      // Updated endpoint to bypass Google's new restrictions
-      return `https://drive.google.com/thumbnail?id=${s}&sz=w800`;
+      return `https://drive.google.com/uc?export=view&id=${s}`;
     }
 
     function previewCronImg(val) {
@@ -2742,11 +2655,11 @@ function driveUrl(idOrUrl) {
           imagem: p.Imagem || '',
           preco: fp(p.Preço) || '',
           categoria: p.Categoria || '',
-          urgente: isUrg,
-          id_produto: p.ID
+          urgente: isUrg
         });
         if (j.status) {
           toast(isUrg ? '🔥 Oferta URGENTE enviada!' : 'Enviado com sucesso!');
+          await apiPost({ action: 'registrar_postagem', id_produto: p.ID, message_id: String(j.message_id || ''), status: 'sucesso' });
           await loadAll();
         } else {
           toast('Falha no envio (Bot retornou false)', 'err');
@@ -2862,43 +2775,48 @@ function driveUrl(idOrUrl) {
     }
 
     // -- CONFIGS & DRAWER MANUAL --
-    function loadCfgUI() { const c = getCfg(); document.getElementById('c-sc').value = c.scriptUrl; document.getElementById('c-bot').value = c.botUrl; document.getElementById('c-em').value = c.email; document.getElementById('c-pw').value = c.pass; document.getElementById('c-sec').value = c.secret; document.getElementById('c-grp').value = c.grupo; document.getElementById('c-sit').value = c.site; }
-    function saveConf() { sCfg({ scriptUrl: document.getElementById('c-sc').value.trim(), botUrl: getCleanUrl(document.getElementById('c-bot').value), email: document.getElementById('c-em').value.trim(), pass: document.getElementById('c-pw').value, secret: document.getElementById('c-sec').value, grupo: document.getElementById('c-grp').value.trim(), site: document.getElementById('c-sit').value.trim() }); toast('Configurações gravadas!'); }
+    function loadCfgUI() {
+      const c = getCfg();
+      document.getElementById('c-sc').value = c.scriptUrl || DCFG.scriptUrl;
+      document.getElementById('c-bot').value = c.botUrl || DCFG.botUrl;
+      document.getElementById('c-em').value = ADMIN_EMAIL;
+      document.getElementById('c-pw').value = ADMIN_PASS;
+      document.getElementById('c-sec').value = c.secret || DCFG.secret;
+      document.getElementById('c-grp').value = c.grupo || DCFG.grupo;
+      document.getElementById('c-sit').value = c.site || DCFG.site;
+      document.getElementById('c-em').readOnly = true;
+      document.getElementById('c-pw').readOnly = true;
+    }
+    function saveConf() {
+      sCfg({
+        scriptUrl: document.getElementById('c-sc').value.trim() || DCFG.scriptUrl,
+        botUrl: (document.getElementById('c-bot').value.trim() || DCFG.botUrl).replace(/\/$/, ''),
+        email: ADMIN_EMAIL,
+        pass: ADMIN_PASS,
+        secret: document.getElementById('c-sec').value || DCFG.secret,
+        grupo: document.getElementById('c-grp').value.trim() || DCFG.grupo,
+        site: document.getElementById('c-sit').value.trim() || DCFG.site,
+        linkGrupo: DCFG.linkGrupo,
+        linktree: DCFG.linktree
+      });
+      toast('Configurações gravadas!');
+    }
 
     async function testConn() {
       const c = getCfg(), sp = document.getElementById('test-sp'), res = document.getElementById('test-result');
-      sp.classList.add('on');
-      res.style.display = 'none';
-      const results = [];
-
+      sp.classList.add('on'); res.style.display = 'none'; const results = [];
       try {
-        const r = await fetchWithTimeout(`${c.scriptUrl}?key=${encodeURIComponent(authTok || c.pass)}&action=listar`, { method: 'GET', timeout: 30000 });
-        const j = await readMaybeJson(r);
-        if (!r.ok || j.status === 'erro') throw new Error(j.mensagem || `HTTP ${r.status}`);
+        const r = await fetchWithTimeout(`${c.scriptUrl}?key=${encodeURIComponent(authTok || c.pass)}&action=listar`);
+        const j = await r.json();
         results.push(`<div style="color:var(--green)">✅ Apps Script: OK (${j.produtos?.length || 0} itens)</div>`);
-      } catch (e) {
-        results.push(`<div style="color:var(--red)">❌ Apps Script: ${esc(e.message)}</div>`);
-      }
-
+      } catch (e) { results.push(`<div style="color:var(--red)">❌ Apps Script: ${e.message}</div>`) }
       try {
-        const j = await apiGet({ action: 'telegram_health' });
-        const missing = [];
-        if (!j.bot_token) missing.push('BOT_TOKEN');
-        if (!j.group_id) missing.push('ID_DO_GRUPO');
-        if (!j.link_site) missing.push('LINK_SITE');
-        if (missing.length) {
-          results.push(`<div style="color:var(--yellow)">⚠️ Telegram via Apps Script: faltando ${esc(missing.join(', '))}</div>`);
-        } else {
-          results.push(`<div style="color:var(--green)">✅ Telegram via Apps Script: configurado</div>`);
-        }
-        results.push(`<div style="color:var(--yellow)">ℹ️ Discloud público está desativado neste painel; o envio passa pelo Apps Script.</div>`);
-      } catch (e) {
-        results.push(`<div style="color:var(--red)">❌ Telegram via Apps Script: ${esc(e.message)}</div>`);
-      }
-
+        const r = await fetchWithTimeout(`${c.botUrl}/ping`, { method: 'GET', redirect: 'follow', timeout: 8000 });
+        const j = await r.json();
+        results.push(`<div style="color:var(--green)">✅ Bot Discloud: Online — ${j.hora || ''}</div>`);
+      } catch (e) { results.push(`<div style="color:var(--red)">❌ Bot Discloud: ${e.message}</div>`) }
       res.innerHTML = `<div style="padding:18px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);display:flex;flex-direction:column;gap:10px;font-size:13px;font-weight:700">${results.join('')}</div>`;
-      sp.classList.remove('on');
-      res.style.display = 'block';
+      sp.classList.remove('on'); res.style.display = 'block';
     }
 
     function openDrawer() { document.getElementById('drawer').classList.add('open'); const sel = document.getElementById('d-sel'); sel.innerHTML = '<option value="">— Em Branco —</option>'; prods.slice(0, 25).forEach(p => sel.innerHTML += `<option value="${p.ID}">${esc((p.Título || '').substring(0, 32))}</option>`); }
@@ -2912,75 +2830,47 @@ function driveUrl(idOrUrl) {
     }
 
     async function checkBot() {
+      const c = getCfg();
+      if (!c.botUrl) return;
       try {
-        const j = await apiGet({ action: 'telegram_health' });
-        if (!j.bot_token || !j.group_id) throw new Error('BOT_TOKEN ou ID_DO_GRUPO ausente no Apps Script.');
-        document.getElementById('bot-pulse').className = 'pulse on';
-        document.getElementById('bot-lbl').textContent = 'Telegram OK';
+        const r = await fetchWithTimeout(`${c.botUrl}/ping`, { method: 'GET', redirect: 'follow', timeout: 8000 });
+        if (r.ok || r.type === 'opaque') {
+          document.getElementById('bot-pulse').className = 'pulse on';
+          document.getElementById('bot-lbl').textContent = 'Bot Ativo';
+        } else throw new Error(`HTTP ${r.status}`);
       } catch (e) {
         document.getElementById('bot-pulse').className = 'pulse err';
-        document.getElementById('bot-lbl').textContent = 'Config incompleta';
-        addLog(`Telegram via Apps Script falhou: ${e.message}`, 'err');
+        document.getElementById('bot-lbl').textContent = 'Bot Offline';
       }
     }
 
     async function refreshStatus() {
-      const c = getCfg(), sp = document.getElementById('st-sp');
-      sp.classList.add('on');
-
+      const c = getCfg(), sp = document.getElementById('st-sp'); sp.classList.add('on');
       try {
-        const botBase = getCleanUrl(c.botUrl);
-        const r = await fetchWithTimeout(`${botBase}/ping`, { method: 'GET', mode: 'cors', credentials: 'omit', timeout: 10000 });
-        const j = await readMaybeJson(r);
-        if (!r.ok) throw new Error(j.detail || `HTTP ${r.status}`);
-
-        document.getElementById('st-status').className = 'badge b-done';
-        document.getElementById('st-status').textContent = 'Online';
-        document.getElementById('st-hora').textContent = j.hora || '--:--';
-        document.getElementById('sess-env').textContent = j.stats?.enviados || 0;
-        document.getElementById('sess-err').textContent = j.stats?.erros || 0;
+        const r = await fetchWithTimeout(`${c.botUrl}/ping`, { method: 'GET', redirect: 'follow', timeout: 10000 });
+        const j = await r.json();
+        document.getElementById('st-status').className = 'badge b-done'; document.getElementById('st-status').textContent = 'Online'; document.getElementById('st-hora').textContent = j.hora || '--:--';
+        document.getElementById('sess-env').textContent = j.stats?.enviados || 0; document.getElementById('sess-err').textContent = j.stats?.erros || 0;
         if (j.stats?.inicio) document.getElementById('sess-ini').textContent = new Date(j.stats.inicio).toLocaleTimeString('pt-BR');
-
-        const cfg = j.config || {};
-        if (cfg.bot_loaded === false || cfg.group_id === false || cfg.api_secret === false) {
-          addLog(`Ping OK, mas há config incompleta: ${JSON.stringify(cfg)}`, 'warn');
-        } else {
-          addLog('Ping OK — Bot online.', 'ok');
-        }
+        addLog('Ping OK — Bot online.', 'ok');
       } catch (e) {
         document.getElementById('st-status').className = 'badge b-no';
         document.getElementById('st-status').textContent = 'Offline';
         addLog(`Ping falhou: ${e.message}`, 'err');
-      } finally {
-        sp.classList.remove('on');
-      }
+      } finally { sp.classList.remove('on') }
     }
 
     window.onload = () => {
       initTheme();
-
-      const reset = new URLSearchParams(window.location.search).get('reset');
-      if (reset === '1') {
-        localStorage.removeItem(CK);
-        localStorage.removeItem('acd_auth_v5');
-        history.replaceState(null, '', window.location.pathname);
-      }
-
+      // Garante preenchimento automático a partir do .env mesmo para quem já tinha localStorage antigo.
       const cfg = getCfg();
+      sCfg({ ...DFCG, ...cfg, scriptUrl: cfg.scriptUrl || DCFG.scriptUrl, botUrl: cfg.botUrl || DCFG.botUrl, email: ADMIN_EMAIL, pass: ADMIN_PASS, secret: cfg.secret || DCFG.secret, grupo: cfg.grupo || DCFG.grupo, site: cfg.site || DCFG.site });
       const saved = localStorage.getItem('acd_auth_v5');
-
-      if (saved && cfg.scriptUrl) {
-        authTok = saved;
-        boot();
-        return;
-      }
-
-      // Importante: DCFG já tem scriptUrl padrão, então a condição antiga
-      // (!cfg.scriptUrl && !cfg.email) deixava a tela de setup escondida
-      // mesmo sem e-mail/senha salvos. Isso prendia o usuário no login.
-      if (!cfg.scriptUrl || !cfg.email || !cfg.pass) {
-        showLoginSetup('Primeiro acesso neste navegador: confirme a URL do Apps Script, e-mail e senha.');
-      }
+      if (saved === ADMIN_PASS) { authTok = saved; boot(); return; }
+      document.getElementById('l-email').value = ADMIN_EMAIL;
+      document.getElementById('l-script').value = getCfg().scriptUrl || DCFG.scriptUrl;
+      document.getElementById('l-bot').value = getCfg().botUrl || DCFG.botUrl;
+      document.getElementById('l-secret').value = getCfg().secret || DCFG.secret;
     };
   </script>
 </body>
