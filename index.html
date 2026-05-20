@@ -2642,7 +2642,6 @@
     function siteb(s) { return (s === 'sim' || s === 'feito') ? '<span class="badge b-pub">Disponível</span>' : '<span class="badge b-pau">Oculto</span>' }
     function fp(p) { const n = parseFloat(p); return isNaN(n) ? String(p || '') : 'R$ ' + n.toFixed(2).replace('.', ',') }
     function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }
-    function attr(s) { return esc(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;') }
 
     // -- INVENTÁRIO & DASHBOARD --
     function renderHome() {
@@ -2777,44 +2776,22 @@
       const homeList = document.getElementById('home-crons-list');
       if (homeList) {
         if (cronData.length === 0) homeList.innerHTML = '<div style="font-size:12px;color:var(--text3);text-align:center;padding:10px">Nenhum cron cadastrado.</div>';
-        else homeList.innerHTML = cronData.map(c => `<div class="sitem"><div><div class="time-input" style="display:inline-block;border:none;padding:0;font-weight:bold;font-size:16px">${esc(c.Horario || '—')}</div></div><span class="badge ${c.Ativo === 'sim' ? 'b-done' : 'b-pau'}">${c.Ativo === 'sim' ? 'Ativo' : 'Pausado'}</span></div>`).join('');
+        else homeList.innerHTML = cronData.map(c => `<div class="sitem"><div><div class="time-input" style="display:inline-block;border:none;padding:0;font-weight:bold;font-size:16px">${c.Horario}</div></div><span class="badge ${c.Ativo === 'sim' ? 'b-done' : 'b-pau'}">${c.Ativo === 'sim' ? 'Ativo' : 'Pausado'}</span></div>`).join('');
       }
-
       const grid = document.getElementById('cron-grid');
-      if (!grid) return;
-
-      if (cronData.length === 0) {
-        grid.innerHTML = '<div style="grid-column:1/-1"><div class="empty"><div class="eico">⏰</div>Nenhum agendamento.</div></div>';
-        return;
+      if (grid) {
+        if (cronData.length === 0) grid.innerHTML = '<div style="grid-column:1/-1"><div class="empty"><div class="eico">⏰</div>Nenhum agendamento.</div></div>';
+        else grid.innerHTML = cronData.map(c => `<div class="cron-card">
+      <div class="cron-card-header"><div class="cron-time">⏰ ${c.Horario}</div><span class="badge ${c.Ativo === 'sim' ? 'b-done' : 'b-pau'}">${c.Ativo === 'sim' ? 'Ativo' : 'Pausado'}</span></div>
+      ${c.Imagem ? `<div style="border-radius:var(--r);overflow:hidden;margin-bottom:8px;max-height:90px"><img src="${esc(c.Imagem)}" alt="imagem fixa" style="width:100%;height:90px;object-fit:cover;display:block" onerror="this.parentElement.style.display='none'"></div>` : ''}
+      <div class="cron-tmpl-preview">${c.Template ? esc(c.Template) : '<i>Template Base Padrão</i>'}${c.Imagem ? ' <span style="color:var(--blue);font-size:10px;font-weight:700">🖼 Imagem fixa</span>' : ''}</div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        ${c.Ativo === 'sim' ? `<button class="btn btn-green btn-sm" id="btn-disp-${c.ID}" onclick="dispararCronAgora('${c.ID}')">▶ Disparar</button>` : ''}
+        <button class="btn btn-ghost btn-sm btn-full" onclick="openCronModal('${c.ID}')">✏️ Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCron('${c.ID}')">🗑</button>
+      </div>
+    </div>`).join('');
       }
-
-      grid.innerHTML = cronData.map(c => {
-        const ativo = String(c.Ativo || '').toLowerCase() === 'sim';
-        const hasTemplate = !!String(c.Template || '').trim();
-        const hasImagem = !!String(c.Imagem || '').trim();
-        const safeId = attr(c.ID || '');
-        const imgPreview = hasImagem ? driveUrl(c.Imagem) : '';
-        return `<div class="cron-card">
-          <div class="cron-card-header">
-            <div>
-              <div class="cron-time">⏰ ${esc(c.Horario || '—')}</div>
-              <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:3px">ID: ${esc(c.ID || '—')}</div>
-            </div>
-            <span class="badge ${ativo ? 'b-done' : 'b-pau'}">${ativo ? 'Ativo' : 'Pausado'}</span>
-          </div>
-          ${imgPreview ? `<div style="border-radius:var(--r);overflow:hidden;margin-bottom:8px;max-height:110px;border:1px solid var(--border)"><img src="${attr(imgPreview)}" alt="imagem fixa" style="width:100%;height:110px;object-fit:cover;display:block" onerror="this.parentElement.style.display='none'"></div>` : ''}
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-            <span class="badge ${hasTemplate ? 'b-pub' : 'b-pau'}">${hasTemplate ? 'Template próprio' : 'Template base'}</span>
-            ${hasImagem ? '<span class="badge b-pub">Imagem fixa</span>' : ''}
-          </div>
-          <div class="cron-tmpl-preview">${hasTemplate ? esc(c.Template) : '<i>Usará o template base do bot</i>'}</div>
-          <div style="display:grid;grid-template-columns:1.2fr 1fr auto;gap:8px;margin-top:10px">
-            <button class="btn btn-green btn-sm btn-full" id="btn-disp-${safeId}" onclick="dispararCronAgora('${safeId}')" ${ativo ? '' : 'disabled title="Ative o cron para disparar manualmente"'}>▶ Disparar agora</button>
-            <button class="btn btn-ghost btn-sm btn-full" onclick="openCronModal('${safeId}')">✏️ Editar</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteCron('${safeId}')">🗑</button>
-          </div>
-        </div>`;
-      }).join('');
     }
 
     function openCronModal(id = null) {
@@ -2915,14 +2892,13 @@
       grid.innerHTML = data.map(h => {
         const msgId = h.MessageID || '';
         const isCron = (h.ID_Produto || '').startsWith('CRON_');
-        const isCronManual = (h.ID_Produto || '').startsWith('CRON_MANUAL_');
 
         if (isCron) {
           return `<div class="hist-card">
         <div class="hist-card-img-ph" style="background:var(--accent-l);color:var(--accent);font-size:22px">⏰</div>
         <div class="hist-card-body">
-          <div class="hist-card-meta"><span class="badge ${h.Status_Final === 'sucesso' ? 'b-done' : 'b-no'}">${esc(h.Status_Final || '—')}</span><span class="hist-card-platform" style="color:var(--accent);font-weight:800">${isCronManual ? 'CRON Manual' : 'Banner CRON'}</span></div>
-          <div class="hist-card-name" style="color:var(--text2);font-style:italic">${isCronManual ? 'Disparo manual do agendamento' : 'Disparo agendado automático'}</div>
+          <div class="hist-card-meta"><span class="badge ${h.Status_Final === 'sucesso' ? 'b-done' : 'b-no'}">${esc(h.Status_Final || '—')}</span><span class="hist-card-platform" style="color:var(--accent);font-weight:800">Banner CRON</span></div>
+          <div class="hist-card-name" style="color:var(--text2);font-style:italic">Disparo agendado automático</div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><span class="hist-card-price">—</span><span class="hist-card-date">${esc(h.Data_Envio || '—')}</span></div>
           ${msgId ? `<div style="font-size:10px;color:var(--text3);margin-top:5px;font-family:var(--mono)">msg_id: ${esc(msgId)}</div>` : ''}
         </div>
@@ -2977,43 +2953,26 @@
       } catch (e) { toast(e.message, 'err'); } finally { if (btnEl) btnEl.disabled = false; }
     }
 
-    // ══ Dispara um agendamento específico imediatamente ═══════════════════════
+    // ══ NOVO: dispara um agendamento específico imediatamente ════════════════
     async function dispararCronAgora(id) {
-      const cron = cronData.find(c => String(c.ID) === String(id));
-      if (!cron) {
-        toast('Agendamento não encontrado no painel. Recarregue a lista.', 'err');
-        addLog(`Cron ${id} não encontrado no estado local.`, 'err');
-        return;
-      }
-
       const btn = document.getElementById('btn-disp-' + id);
-      const oldHtml = btn ? btn.innerHTML : '';
-      if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Disparando…'; }
-
-      toast('Disparando agendamento no Telegram…', 'warn');
-      addLog(`Disparo manual iniciado: ${cron.Horario || 'sem horário'} | ${cron.ID}`, 'info');
-
+      if (btn) btn.disabled = true;
+      toast('Disparando agendamento…', 'warn');
       try {
-        // Envia template/imagem junto com o ID para não depender de uma nova leitura da planilha no backend.
-        const j = await botFetch('/disparar-cron', {
-          cron_id: cron.ID || id,
-          template: cron.Template || '',
-          imagem: cron.Imagem || ''
-        });
-
+        // Passa o cron_id para o bot buscar template e imagem do cron específico
+        const j = await botFetch('/disparar-cron', { cron_id: id });
         if (j.status) {
           toast('⏰ Agendamento disparado com sucesso no Telegram!');
-          addLog(`Cron ${cron.ID} disparado manualmente. message_id=${j.message_id || '—'}`, 'ok');
-          try { await loadHistorico(); } catch (_) { }
+          addLog(`Cron ${id} disparado manualmente.`, 'ok');
         } else {
           toast('Falha ao disparar este agendamento.', 'err');
-          addLog(`Cron ${cron.ID} retornou status falso.`, 'warn');
+          addLog(`Cron ${id} retornou status falso.`, 'warn');
         }
       } catch (e) {
         toast(e.message, 'err');
-        addLog(`Erro no disparo manual do cron ${cron.ID}: ${e.message}`, 'err');
+        addLog(`Erro disparo manual cron ${id}: ${e.message}`, 'err');
       } finally {
-        if (btn) { btn.disabled = false; btn.innerHTML = oldHtml || '▶ Disparar agora'; }
+        if (btn) btn.disabled = false;
       }
     }
 
