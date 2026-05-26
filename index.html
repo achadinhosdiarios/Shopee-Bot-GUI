@@ -3147,6 +3147,36 @@
       return normalizePlatformKey(value);
     }
 
+    function getPlatformResultsSummary(j = {}) {
+      const results = j.results || {};
+      const entries = Object.entries(results);
+      const ok = entries.filter(([, r]) => r && r.ok).map(([p]) => p);
+      const fail = entries.filter(([, r]) => !r || !r.ok).map(([p, r]) => ({
+        platform: p,
+        erro: (r && (r.erro || (r.errors || []).join(' | '))) || 'falha sem detalhe'
+      }));
+      const warnings = entries.flatMap(([p, r]) => (r && r.warnings || []).map(w => `${p}: ${w}`));
+      return { entries, ok, fail, warnings, okAll: entries.length > 0 && fail.length === 0, okAny: ok.length > 0 };
+    }
+
+    function logPlatformIssues(j = {}, contexto = 'Envio') {
+      const s = getPlatformResultsSummary(j);
+      s.fail.forEach(f => addLog(`${contexto} / ${platformLabel(f.platform)}: ${f.erro}`, 'err'));
+      s.warnings.forEach(w => addLog(`${contexto}: ${w}`, 'warn'));
+      return s;
+    }
+
+    function toastPlatformResult(j = {}, successMsg = 'Enviado com sucesso!') {
+      const s = getPlatformResultsSummary(j);
+      if (!s.entries.length) {
+        if (j.status === true || j.status === 'sucesso') return toast(successMsg, 'ok');
+        return toast(j.erro || 'Falha no envio.', 'err');
+      }
+      if (s.okAll) return toast(successMsg, 'ok');
+      if (s.okAny) return toast(`Envio parcial: ${s.ok.map(platformLabel).join(' + ')} OK; ${s.fail.map(f => platformLabel(f.platform)).join(' + ')} falhou.`, 'warn');
+      return toast(s.fail.map(f => `${platformLabel(f.platform)}: ${f.erro}`).join(' | ') || j.erro || 'Falha no envio.', 'err');
+    }
+
     function cronPlatformValue(value) {
       const v = String(value || 'telegram').toLowerCase();
       if (v.includes('whatsapp') && v.includes('telegram')) return 'ambos';
@@ -3781,22 +3811,19 @@
           urgente: isUrg,
           plataformas: selected
         });
-        if (j.status) {
-          const results = j.results || {};
-          for (const [platform, result] of Object.entries(results)) {
-            await apiPost({
-              action: 'registrar_postagem',
-              id_produto: p.ID,
-              message_id: String(result.message_id || ''),
-              status: result.ok ? 'sucesso' : 'erro',
-              plataforma: platform === 'whatsapp' ? 'WhatsApp' : 'Telegram'
-            });
-          }
-          toast(isUrg ? '🔥 Oferta URGENTE enviada!' : 'Enviado com sucesso!');
-          await loadAll();
-        } else {
-          toast('Falha no envio (Bot retornou false)', 'err');
+        const results = j.results || {};
+        for (const [platform, result] of Object.entries(results)) {
+          await apiPost({
+            action: 'registrar_postagem',
+            id_produto: p.ID,
+            message_id: String(result.message_id || ''),
+            status: result.ok ? 'sucesso' : 'erro',
+            plataforma: platform === 'whatsapp' ? 'WhatsApp' : 'Telegram'
+          });
         }
+        logPlatformIssues(j, 'Oferta');
+        toastPlatformResult(j, isUrg ? '🔥 Oferta URGENTE enviada!' : 'Enviado com sucesso!');
+        await loadAll();
       } catch (e) { toast(e.message, 'err'); } finally { if (btnEl) btnEl.disabled = false; }
     }
 
@@ -3825,14 +3852,10 @@
           plataformas: cron.Plataformas || 'telegram'
         });
 
-        if (j.status) {
-          toast('⏰ Agendamento disparado com sucesso!');
-          addLog(`Cron ${cron.ID} disparado manualmente. message_id=${j.message_id || '—'}`, 'ok');
-          try { await loadHistorico(); } catch (_) { }
-        } else {
-          toast('Falha ao disparar este agendamento.', 'err');
-          addLog(`Cron ${cron.ID} retornou status falso.`, 'warn');
-        }
+        logPlatformIssues(j, `Cron ${cron.ID}`);
+        toastPlatformResult(j, '⏰ Agendamento disparado com sucesso!');
+        addLog(`Cron ${cron.ID} retorno=${j.status || '—'} message_id=${j.message_id || '—'}`, j.ok_all || j.status === 'sucesso' ? 'ok' : 'warn');
+        try { await loadHistorico(); } catch (_) { }
       } catch (e) {
         toast(e.message, 'err');
         addLog(`Erro no disparo manual do cron ${cron.ID}: ${e.message}`, 'err');
@@ -3846,7 +3869,12 @@
       btn.disabled = true; sp.classList.add('on');
       try {
         const j = await botFetch('/forcar-postagem', { plataformas: activePlatform });
-        toast(j.status === 'nenhum_pendente' ? 'A fila está vazia.' : 'Primeiro da fila enviado!');
+        if (j.status === 'nenhum_pendente') {
+          toast('A fila está vazia.', 'warn');
+        } else {
+          logPlatformIssues(j, 'Fila');
+          toastPlatformResult(j, 'Primeiro da fila enviado!');
+        }
         await loadAll();
       } catch (e) { toast(e.message, 'err') } finally { btn.disabled = false; sp.classList.remove('on') }
     }
@@ -3970,7 +3998,13 @@
       const titulo = document.getElementById('d-tit').value, link = document.getElementById('d-lnk').value, imagem = document.getElementById('d-img').value, preco = document.getElementById('d-pre').value, plataformas = document.getElementById('d-plats')?.value || activePlatform;
       if (!titulo || !link) return toast('Título e Link obrigatórios', 'err');
       const btn = document.getElementById('btn-snd'), sp = document.getElementById('snd-sp'); btn.disabled = true; sp.classList.add('on');
-      try { const j = await botFetch('/enviar-oferta', { titulo, link, imagem, preco, plataformas }); if (j.status) { toast('Avulso enviado!'); closeDrawer(); loadAll(); } } catch (e) { toast(e.message, 'err') } finally { btn.disabled = false; sp.classList.remove('on') }
+      try {
+        const j = await botFetch('/enviar-oferta', { titulo, link, imagem, preco, plataformas });
+        logPlatformIssues(j, 'Avulso');
+        toastPlatformResult(j, 'Avulso enviado!');
+        if (getPlatformResultsSummary(j).okAny) closeDrawer();
+        loadAll();
+      } catch (e) { toast(e.message, 'err') } finally { btn.disabled = false; sp.classList.remove('on') }
     }
 
     async function checkBot() {
