@@ -1492,6 +1492,46 @@
 
 
 
+
+    .platform-switch {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      padding: 0 10px 12px;
+    }
+
+    .platform-chip {
+      border: 1.5px solid var(--border);
+      background: var(--surface2);
+      color: var(--text2);
+      border-radius: 999px;
+      padding: 8px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: var(--transition);
+      text-align: center;
+    }
+
+    .platform-chip:hover {
+      background: var(--surface3);
+      color: var(--text);
+    }
+
+    .platform-chip.active {
+      background: var(--accent-l);
+      color: var(--accent);
+      border-color: rgba(232, 93, 38, .35);
+      box-shadow: 0 4px 14px var(--accent-l);
+    }
+
+    .b-wa {
+      background: rgba(34, 197, 94, .12);
+      color: var(--green);
+      border: 1px solid rgba(34, 197, 94, .22);
+    }
+
+
     /* ══ UI REFINEMENTS — INVENTÁRIO / CONFIG / DASHBOARD ═════════════════ */
     .home-grid {
       display: grid;
@@ -1898,8 +1938,15 @@
           <span class="ni">⏰</span><span>Agendamentos</span>
         </button>
         <button class="nav-item" data-panel="historico" onclick="goTo('historico')">
-          <span class="ni">📱</span><span>Canal Telegram</span>
+          <span class="ni">🧾</span><span>Histórico</span>
         </button>
+
+        <div class="nav-section">Gerenciador Ativo</div>
+        <div class="platform-switch" aria-label="Selecionar plataforma">
+          <button class="platform-chip" data-platform-chip="telegram" onclick="setPlatform('telegram')">Telegram</button>
+          <button class="platform-chip" data-platform-chip="whatsapp" onclick="setPlatform('whatsapp')">WhatsApp</button>
+          <button class="platform-chip" data-platform-chip="ambos" onclick="setPlatform('ambos')">Ambos</button>
+        </div>
 
         <div class="nav-section">Sistema</div>
         <button class="nav-item" data-panel="atividade" onclick="goTo('atividade')">
@@ -1947,7 +1994,7 @@
             <div class="stat c-gr">
               <div class="stat-icon">✅</div>
               <div class="stat-n" id="s-fei">—</div>
-              <div class="stat-l">Enviados (Telegram)</div>
+              <div class="stat-l" id="s-fei-label">Enviados (Telegram)</div>
             </div>
             <div class="stat c-bl">
               <div class="stat-icon">🌐</div>
@@ -1957,7 +2004,7 @@
             <div class="stat c-ye">
               <div class="stat-icon">⏳</div>
               <div class="stat-n" id="s-pen">—</div>
-              <div class="stat-l">Pendentes (Telegram)</div>
+              <div class="stat-l" id="s-pen-label">Pendentes (Telegram)</div>
             </div>
           </div>
           <div class="home-grid">
@@ -1974,6 +2021,7 @@
                       <th>Produto</th>
                       <th>Preço</th>
                       <th>Telegram</th>
+                      <th>WhatsApp</th>
                       <th>Site</th>
                       <th>🔥</th>
                       <th>Ação</th>
@@ -1981,7 +2029,7 @@
                   </thead>
                   <tbody id="home-tbl">
                     <tr>
-                      <td colspan="7">
+                      <td colspan="8">
                         <div class="empty">
                           <div class="eico">⏳</div>Carregando…
                         </div>
@@ -2028,10 +2076,10 @@
             <div class="inventory-filters">
               <input id="q-s" placeholder="🔍 Buscar produto por título…" oninput="filterTbl()">
               <select id="q-st" onchange="filterTbl()">
-                <option value="">Telegram: Todos</option>
-                <option value="pendente">Telegram: Pendente</option>
-                <option value="feito">Telegram: Enviado</option>
-                <option value="pausado">Telegram: Pausado</option>
+                <option value="">Canal ativo: Todos</option>
+                <option value="pendente">Canal ativo: Pendente</option>
+                <option value="feito">Canal ativo: Enviado</option>
+                <option value="pausado">Canal ativo: Pausado</option>
               </select>
               <select id="q-site" onchange="filterTbl()">
                 <option value="">Site: Todos</option>
@@ -2068,15 +2116,20 @@
           </div>
         </div>
 
-        <!-- ══ CANAL TELEGRAM ═════════════════════════════════════════════════ -->
+        <!-- ══ HISTÓRICO MULTICANAL ═════════════════════════════════════════════════ -->
         <div class="panel" id="p-historico">
           <div class="sh">
             <div>
-              <div class="st">📱 Canal Telegram</div>
-              <div style="font-size:12px;color:var(--text3);margin-top:4px;font-weight:600">Histórico de disparos na
+              <div class="st">🧾 Histórico Multicanal</div>
+              <div style="font-size:12px;color:var(--text3);margin-top:4px;font-weight:600">Histórico de disparos por plataforma na
                 planilha.</div>
             </div>
             <div style="display:flex;gap:10px;align-items:center">
+              <select id="h-platform" style="width:150px" onchange="filterHistorico()">
+                <option value="">Todas</option>
+                <option value="Telegram">Telegram</option>
+                <option value="WhatsApp">WhatsApp</option>
+              </select>
               <input id="h-s" placeholder="🔍 Filtrar…" style="width:220px" oninput="filterHistorico()">
               <button class="btn btn-ghost btn-sm" onclick="loadHistorico()">↺ Recarregar</button>
             </div>
@@ -2098,7 +2151,7 @@
           <div class="card telegram-help">
             <div class="card-body" style="display:flex;align-items:flex-start;gap:14px;padding:16px 20px">
               <div style="font-size:22px">💡</div>
-              <p style="font-size:13px;color:var(--text2);line-height:1.6">Nesta página, mantemos só as ações essenciais do canal: <b>reenviar</b> uma oferta ou <b>excluir</b> a mensagem publicada. Para excluir, o Bot precisa do <code
+              <p style="font-size:13px;color:var(--text2);line-height:1.6">Nesta página, mantemos as ações essenciais por plataforma: <b>reenviar</b> uma oferta ou <b>limpar/excluir</b> o registro publicado. Para excluir, o Bot precisa do <code
                   style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-family:var(--mono);color:var(--blue);font-size:11px">message_id</code>
                 salvo no histórico.</p>
             </div>
@@ -2327,6 +2380,15 @@
         </select>
       </div>
       <div class="fg2" style="margin-top: 14px">
+        <label>Plataforma(s) do Agendamento</label>
+        <select id="c-plats">
+          <option value="telegram">📱 Apenas Telegram</option>
+          <option value="whatsapp">🟢 Apenas WhatsApp</option>
+          <option value="ambos">🔁 Telegram + WhatsApp</option>
+        </select>
+        <div class="hint">O WhatsApp usa a Cloud API oficial da Meta e envia para os destinatários configurados no backend.</div>
+      </div>
+      <div class="fg2" style="margin-top: 14px">
         <label>🖼️ Imagem Fixa do Cron (opcional)</label>
         <div style="position:relative">
           <input type="text" id="c-img" placeholder="Cole o ID do arquivo do Google Drive (ex: 1aBcD2eFgH…)"
@@ -2374,6 +2436,14 @@
           <option value="">— Em Branco —</option>
         </select>
       </div>
+      <div class="fg2" style="margin-top:12px">
+        <label>Plataforma(s)</label>
+        <select id="d-plats">
+          <option value="telegram">📱 Telegram</option>
+          <option value="whatsapp">🟢 WhatsApp</option>
+          <option value="ambos">🔁 Ambos</option>
+        </select>
+      </div>
       <div style="height:1px;background:var(--border);margin:18px 0"></div>
       <div class="fg2"><label>Link *</label><input id="d-lnk" type="url" placeholder="https://shopee…"></div>
       <div class="fg2" style="margin-top:12px"><label>Título *</label><input id="d-tit" placeholder="Nome do produto…">
@@ -2399,12 +2469,61 @@
       inicio: { title: 'Dashboard Analítico', icon: '🏠' },
       produtos: { title: 'Gestão de Inventário', icon: '📦' },
       automacao: { title: 'Agendamentos Bot', icon: '⏰' },
-      historico: { title: 'Canal Telegram', icon: '📱' },
+      historico: { title: 'Histórico Multicanal', icon: '🧾' },
       atividade: { title: 'Console do Sistema', icon: '📋' },
       config: { title: 'Configurações', icon: '⚙️' },
     };
 
     let prods = [], cronData = [], historicoData = [], authTok = null, logEntries = [], _tt;
+    let activePlatform = localStorage.getItem('acd_platform_v6') || 'telegram';
+
+    function normalizePlatformKey(value) {
+      const v = String(value || '').toLowerCase();
+      if (v === 'whatsapp' || v === 'wa' || v === 'zap') return 'whatsapp';
+      if (v === 'ambos' || v === 'both' || v === 'all') return 'ambos';
+      return 'telegram';
+    }
+
+    function platformLabel(value = activePlatform) {
+      const p = normalizePlatformKey(value);
+      if (p === 'whatsapp') return 'WhatsApp';
+      if (p === 'ambos') return 'Telegram + WhatsApp';
+      return 'Telegram';
+    }
+
+    function platformField(value = activePlatform) {
+      return normalizePlatformKey(value) === 'whatsapp' ? 'EnvWhatsapp' : 'EnvTelegram';
+    }
+
+    function platformPayload(value = activePlatform) {
+      return normalizePlatformKey(value);
+    }
+
+    function cronPlatformValue(value) {
+      const v = String(value || 'telegram').toLowerCase();
+      if (v.includes('whatsapp') && v.includes('telegram')) return 'ambos';
+      if (v.includes('whatsapp')) return 'whatsapp';
+      return 'telegram';
+    }
+
+    function setPlatform(platform) {
+      activePlatform = normalizePlatformKey(platform);
+      localStorage.setItem('acd_platform_v6', activePlatform);
+      updatePlatformUI();
+      renderStats();
+      renderHome();
+      if (document.getElementById('p-produtos')?.classList.contains('active')) filterTbl();
+      if (document.getElementById('p-historico')?.classList.contains('active')) filterHistorico();
+      toast(`Gerenciador ativo: ${platformLabel()}`, 'ok');
+    }
+
+    function updatePlatformUI() {
+      document.querySelectorAll('[data-platform-chip]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.platformChip === activePlatform);
+      });
+      const hp = document.getElementById('h-platform');
+      if (hp) hp.value = activePlatform === 'ambos' ? '' : platformLabel(activePlatform);
+    }
 
     // -- TEMA --
     function initTheme() { const s = localStorage.getItem('acd_theme_v5') || 'light'; document.documentElement.setAttribute('data-theme', s); }
@@ -2589,7 +2708,7 @@
       document.getElementById('login-screen').style.opacity = '0';
       setTimeout(() => {
         document.getElementById('login-screen').style.display = 'none'; document.getElementById('app').style.display = 'flex';
-        loadCfgUI(); addLog('Sistema inicializado.', 'ok');
+        loadCfgUI(); updatePlatformUI(); addLog('Sistema inicializado.', 'ok');
         loadAll(); checkBot();
       }, 380);
     }
@@ -2626,19 +2745,29 @@
     }
 
     function renderStats() {
+      const field = platformField();
+      const pLabel = platformLabel();
       document.getElementById('s-tot').textContent = prods.length;
-      document.getElementById('s-fei').textContent = prods.filter(p => p.EnvTelegram === 'feito').length;
-      document.getElementById('s-pen').textContent = prods.filter(p => p.EnvTelegram === 'pendente').length;
+      if (activePlatform === 'ambos') {
+        document.getElementById('s-fei').textContent = prods.filter(p => p.EnvTelegram === 'feito' || p.EnvWhatsapp === 'feito').length;
+        document.getElementById('s-pen').textContent = prods.filter(p => p.EnvTelegram === 'pendente' || (p.EnvWhatsapp || 'pendente') === 'pendente').length;
+      } else {
+        document.getElementById('s-fei').textContent = prods.filter(p => p[field] === 'feito').length;
+        document.getElementById('s-pen').textContent = prods.filter(p => (p[field] || 'pendente') === 'pendente').length;
+      }
       document.getElementById('s-site').textContent = prods.filter(p => p.Status === 'feito' || p.Status === 'sim').length;
+      const feiLabel = document.getElementById('s-fei-label'), penLabel = document.getElementById('s-pen-label');
+      if (feiLabel) feiLabel.textContent = `Enviados (${pLabel})`;
+      if (penLabel) penLabel.textContent = `Pendentes (${pLabel})`;
     }
 
     function updateBadges() {
-      const pen = prods.filter(p => p.EnvTelegram === 'pendente').length;
+      const pen = prods.filter(p => p.EnvTelegram === 'pendente' || (p.EnvWhatsapp || 'pendente') === 'pendente').length;
       const nb = document.getElementById('nb-pend');
       if (pen > 0) { nb.textContent = pen; nb.style.display = 'block' } else nb.style.display = 'none';
     }
 
-    function sb(s) { const m = { feito: 'b-done', pendente: 'b-pend', pausado: 'b-pau' }; return `<span class="badge ${m[s] || 'b-pend'}">${s || 'pendente'}</span>` }
+    function sb(s, label = '') { const m = { feito: 'b-done', pendente: 'b-pend', pausado: 'b-pau', erro: 'b-no' }; const cls = label === 'WhatsApp' ? 'b-wa' : (m[s] || 'b-pend'); return `<span class="badge ${cls}" title="${label || 'status'}">${label ? label + ': ' : ''}${s || 'pendente'}</span>` }
     function siteb(s) { return (s === 'sim' || s === 'feito') ? '<span class="badge b-pub">Disponível</span>' : '<span class="badge b-pau">Oculto</span>' }
     function fp(p) { const n = parseFloat(p); return isNaN(n) ? String(p || '') : 'R$ ' + n.toFixed(2).replace('.', ',') }
     function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }
@@ -2646,9 +2775,10 @@
 
     // -- INVENTÁRIO & DASHBOARD --
     function renderHome() {
-      const tb = document.getElementById('home-tbl'), items = prods.filter(p => p.EnvTelegram === 'pendente').slice(0, 6);
+      const activeField = platformField();
+      const tb = document.getElementById('home-tbl'), items = prods.filter(p => activePlatform === 'ambos' ? (p.EnvTelegram === 'pendente' || (p.EnvWhatsapp || 'pendente') === 'pendente') : ((p[activeField] || 'pendente') === 'pendente')).slice(0, 6);
       if (!items.length) {
-        tb.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="eico">🎉</div>Nenhum pendente</div></td></tr>';
+        tb.innerHTML = '<tr><td colspan="8"><div class="empty"><div class="eico">🎉</div>Nenhum pendente</div></td></tr>';
         return;
       }
       tb.innerHTML = items.map(p => {
@@ -2660,7 +2790,8 @@
             <div class="pmeta">${p.Categoria || 'Geral'}</div>
           </td>
           <td><span class="price">${fp(p.Preço)}</span></td>
-          <td>${sb(p.EnvTelegram)}</td>
+          <td>${sb(p.EnvTelegram, 'Telegram')}</td>
+          <td>${sb(p.EnvWhatsapp || 'pendente', 'WhatsApp')}</td>
           <td>${siteb(p.Status)}</td>
           <td>
             <button class="ib${isUrg ? ' ib-urg' : ''}" title="${isUrg ? 'Desmarcar urgente' : 'Marcar urgente (estoque baixo)'}" onclick="toggleUrgente('${p.ID}', this)">
@@ -2669,7 +2800,7 @@
             ${isUrg ? '<span class="badge b-urg" style="font-size:9px;margin-left:4px">URGENTE</span>' : ''}
           </td>
           <td>
-            <button class="ib" title="Enviar agora" onclick="qSend('${p.ID}', this)">✈️</button>
+            <button class="ib" title="Enviar agora em ${platformLabel()}" onclick="qSend('${p.ID}', this)">✈️</button>
           </td>
         </tr>`;
       }).join('');
@@ -2699,7 +2830,8 @@
               <div class="inv-price">${fp(p.Preço)}</div>
             </div>
             <div class="inv-badges">
-              ${sb(p.EnvTelegram)}
+              ${sb(p.EnvTelegram, 'Telegram')}
+              ${sb(p.EnvWhatsapp || 'pendente', 'WhatsApp')}
               ${siteb(p.Status)}
               ${isUrg ? '<span class="badge b-urg">URGENTE</span>' : ''}
               <span class="badge b-pau">${esc(p.Categoria || 'Geral')}</span>
@@ -2712,7 +2844,7 @@
             </div>
             <div class="inv-note">${comentario}</div>
             <div class="inv-actions">
-              <button class="btn btn-green btn-sm" onclick="qSend('${p.ID}', this)">✈️ Enviar</button>
+              <button class="btn btn-green btn-sm" onclick="qSend('${p.ID}', this)">✈️ Enviar ${platformLabel()}</button>
               <button class="btn btn-ghost btn-sm ${isUrg ? 'ib-urg' : ''}" onclick="toggleUrgente('${p.ID}', this)">${isUrg ? '🔥 Urgente' : '🌡️ Urgente'}</button>
               <button class="btn btn-ghost btn-sm btn-icon-soft" onclick="openEdit('${p.ID}')">✏️ Editar</button>
               ${link}
@@ -2724,7 +2856,12 @@
 
     function filterTbl() {
       const q = document.getElementById('q-s').value.toLowerCase(), st = document.getElementById('q-st').value, siteSt = document.getElementById('q-site').value;
-      renderProds(prods.filter(p => (p.Título || '').toLowerCase().includes(q) && (!st || p.EnvTelegram === st) && (!siteSt || (siteSt === 'feito' ? (p.Status === 'sim' || p.Status === 'feito') : (p.Status !== 'sim' && p.Status !== 'feito')))));
+      const matchesPlatform = (p) => {
+        if (!st) return true;
+        if (activePlatform === 'ambos') return p.EnvTelegram === st || (p.EnvWhatsapp || 'pendente') === st;
+        return (p[platformField()] || 'pendente') === st;
+      };
+      renderProds(prods.filter(p => (p.Título || '').toLowerCase().includes(q) && matchesPlatform(p) && (!siteSt || (siteSt === 'feito' ? (p.Status === 'sim' || p.Status === 'feito') : (p.Status !== 'sim' && p.Status !== 'feito')))));
     }
 
     // -- TOGGLE URGENTE --
@@ -2777,7 +2914,7 @@
       const homeList = document.getElementById('home-crons-list');
       if (homeList) {
         if (cronData.length === 0) homeList.innerHTML = '<div style="font-size:12px;color:var(--text3);text-align:center;padding:10px">Nenhum cron cadastrado.</div>';
-        else homeList.innerHTML = cronData.map(c => `<div class="sitem"><div><div class="time-input" style="display:inline-block;border:none;padding:0;font-weight:bold;font-size:16px">${esc(c.Horario || '—')}</div></div><span class="badge ${c.Ativo === 'sim' ? 'b-done' : 'b-pau'}">${c.Ativo === 'sim' ? 'Ativo' : 'Pausado'}</span></div>`).join('');
+        else homeList.innerHTML = cronData.map(c => `<div class="sitem"><div><div class="time-input" style="display:inline-block;border:none;padding:0;font-weight:bold;font-size:16px">${esc(c.Horario || '—')}</div><div style="font-size:10px;color:var(--text3);font-weight:800;text-transform:uppercase;margin-top:2px">${platformLabel(cronPlatformValue(c.Plataformas))}</div></div><span class="badge ${c.Ativo === 'sim' ? 'b-done' : 'b-pau'}">${c.Ativo === 'sim' ? 'Ativo' : 'Pausado'}</span></div>`).join('');
       }
 
       const grid = document.getElementById('cron-grid');
@@ -2794,6 +2931,7 @@
         const hasImagem = !!String(c.Imagem || '').trim();
         const safeId = attr(c.ID || '');
         const imgPreview = hasImagem ? driveUrl(c.Imagem) : '';
+        const cronPlat = cronPlatformValue(c.Plataformas);
         return `<div class="cron-card">
           <div class="cron-card-header">
             <div>
@@ -2806,6 +2944,7 @@
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
             <span class="badge ${hasTemplate ? 'b-pub' : 'b-pau'}">${hasTemplate ? 'Template próprio' : 'Template base'}</span>
             ${hasImagem ? '<span class="badge b-pub">Imagem fixa</span>' : ''}
+            <span class="badge b-wa">${platformLabel(cronPlat)}</span>
           </div>
           <div class="cron-tmpl-preview">${hasTemplate ? esc(c.Template) : '<i>Usará o template base do bot</i>'}</div>
           <div style="display:grid;grid-template-columns:1.2fr 1fr auto;gap:8px;margin-top:10px">
@@ -2825,6 +2964,7 @@
         const m = raw.match(/(\d{1,2}):(\d{2})/);
         document.getElementById('c-horario').value = m ? String(m[1]).padStart(2, '0') + ':' + m[2] : '12:00';
         document.getElementById('c-ativo').value = c.Ativo || 'sim';
+        document.getElementById('c-plats').value = cronPlatformValue(c.Plataformas);
         document.getElementById('c-tmpl').value = c.Template || '';
         const imgRaw = c.Imagem || '';
         const imgIdMatch = imgRaw.match(/[?&]id=([^&]+)/) || imgRaw.match(/\/d\/([^/]+)/);
@@ -2835,6 +2975,7 @@
       } else {
         document.getElementById('c-horario').value = '12:00';
         document.getElementById('c-ativo').value = 'sim';
+        document.getElementById('c-plats').value = activePlatform === 'ambos' ? 'ambos' : activePlatform;
         document.getElementById('c-tmpl').value = '';
         document.getElementById('c-img').value = '';
         previewCronImg('');
@@ -2870,12 +3011,12 @@
     }
 
     async function saveCron() {
-      const id = document.getElementById('c-id').value, horario = document.getElementById('c-horario').value, ativo = document.getElementById('c-ativo').value, template = document.getElementById('c-tmpl').value, imagem = document.getElementById('c-img').value.trim();
+      const id = document.getElementById('c-id').value, horario = document.getElementById('c-horario').value, ativo = document.getElementById('c-ativo').value, template = document.getElementById('c-tmpl').value, imagem = document.getElementById('c-img').value.trim(), plataformas = document.getElementById('c-plats').value;
       if (!horario) return toast('Selecione um horário', 'err');
       const btn = document.getElementById('btn-save-cron'), sp = document.getElementById('cron-sp');
       btn.disabled = true; sp.classList.add('on');
       try {
-        const r = await apiPost({ action: 'salvar_cron', id, horario, ativo, template, imagem });
+        const r = await apiPost({ action: 'salvar_cron', id, horario, ativo, template, imagem, plataformas });
         if (r.status === 'sucesso') { toast('Agendamento salvo na Planilha!'); closeCronModal(); await loadCrons(); await syncBotCrons(); }
       } catch (e) { toast('Erro ao salvar', 'err'); } finally { btn.disabled = false; sp.classList.remove('on'); }
     }
@@ -2906,7 +3047,15 @@
       } catch (e) { grid.innerHTML = '<div style="grid-column:1/-1"><div class="empty"><div class="eico">⚠️</div>Falha de conexão.</div></div>'; }
     }
 
-    function filterHistorico() { const q = document.getElementById('h-s').value.toLowerCase(); renderHistoricoGrid(historicoData.filter(h => (h.ID_Produto || '').toLowerCase().includes(q) || (h.Status_Final || '').toLowerCase().includes(q))); }
+    function filterHistorico() {
+      const q = document.getElementById('h-s').value.toLowerCase();
+      const hp = document.getElementById('h-platform')?.value || '';
+      renderHistoricoGrid(historicoData.filter(h => {
+        const platformOk = !hp || String(h.Plataforma || 'Telegram') === hp;
+        const textOk = (h.ID_Produto || '').toLowerCase().includes(q) || (h.Status_Final || '').toLowerCase().includes(q) || (h.Plataforma || '').toLowerCase().includes(q);
+        return platformOk && textOk;
+      }));
+    }
 
     function renderHistoricoGrid(data) {
       const grid = document.getElementById('hist-grid'), total = data.length, suc = data.filter(h => (h.Status_Final || '').toLowerCase() === 'sucesso').length;
@@ -2916,18 +3065,20 @@
         const msgId = h.MessageID || '';
         const isCron = (h.ID_Produto || '').startsWith('CRON_');
         const isCronManual = (h.ID_Produto || '').startsWith('CRON_MANUAL_');
+        const hPlat = h.Plataforma || 'Telegram';
+        const hPlatKey = hPlat.toLowerCase() === 'whatsapp' ? 'whatsapp' : 'telegram';
 
         if (isCron) {
           return `<div class="hist-card">
         <div class="hist-card-img-ph" style="background:var(--accent-l);color:var(--accent);font-size:22px">⏰</div>
         <div class="hist-card-body">
-          <div class="hist-card-meta"><span class="badge ${h.Status_Final === 'sucesso' ? 'b-done' : 'b-no'}">${esc(h.Status_Final || '—')}</span><span class="hist-card-platform" style="color:var(--accent);font-weight:800">${isCronManual ? 'CRON Manual' : 'Banner CRON'}</span></div>
+          <div class="hist-card-meta"><span class="badge ${h.Status_Final === 'sucesso' ? 'b-done' : 'b-no'}">${esc(h.Status_Final || '—')}</span><span class="hist-card-platform" style="color:var(--accent);font-weight:800">${isCronManual ? 'CRON Manual' : 'Banner CRON'} · ${esc(hPlat)}</span></div>
           <div class="hist-card-name" style="color:var(--text2);font-style:italic">${isCronManual ? 'Disparo manual do agendamento' : 'Disparo agendado automático'}</div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><span class="hist-card-price">—</span><span class="hist-card-date">${esc(h.Data_Envio || '—')}</span></div>
           ${msgId ? `<div style="font-size:10px;color:var(--text3);margin-top:5px;font-family:var(--mono)">msg_id: ${esc(msgId)}</div>` : ''}
         </div>
         <div class="hist-card-footer">
-          <button class="btn btn-danger btn-xs btn-full" onclick="apagarCron('${h.ID_Produto}', '${msgId}')">🗑️ Apagar do Canal</button>
+          <button class="btn btn-danger btn-xs btn-full" onclick="apagarCron('${h.ID_Produto}', '${msgId}', '${hPlatKey}')">${hPlatKey === 'whatsapp' ? '🧹 Limpar histórico' : '🗑️ Apagar do Canal'}</button>
         </div>
       </div>`;
         }
@@ -2936,25 +3087,26 @@
         return `<div class="hist-card">
       ${imagem ? `<img class="hist-card-img" src="${esc(imagem)}" onerror="this.src='';this.className='hist-card-img-ph';this.innerHTML='🛍'">` : `<div class="hist-card-img-ph">🛍</div>`}
       <div class="hist-card-body">
-        <div class="hist-card-meta"><span class="badge ${h.Status_Final === 'sucesso' ? 'b-done' : 'b-no'}">${esc(h.Status_Final || '—')}</span><span class="hist-card-platform">Telegram</span></div>
+        <div class="hist-card-meta"><span class="badge ${h.Status_Final === 'sucesso' ? 'b-done' : 'b-no'}">${esc(h.Status_Final || '—')}</span><span class="hist-card-platform">${esc(hPlat)}</span></div>
         <div class="hist-card-name">${esc(titulo)}</div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><span class="hist-card-price">${preco}</span><span class="hist-card-date">${esc(h.Data_Envio || '—')}</span></div>
         ${msgId ? `<div style="font-size:10px;color:var(--text3);margin-top:5px;font-family:var(--mono)">msg_id: ${esc(msgId)}</div>` : ''}
       </div>
       <div class="hist-card-footer">
-        <button class="btn btn-ghost btn-xs" onclick="qSend('${h.ID_Produto}')">🔄 Reenviar</button>
-        <button class="btn btn-danger btn-xs" onclick="apagarTelegram('${h.ID_Produto}', '${msgId}')">🗑️ Excluir</button>
+        <button class="btn btn-ghost btn-xs" onclick="qSend('${h.ID_Produto}', null, '${hPlatKey}')">🔄 Reenviar</button>
+        <button class="btn btn-danger btn-xs" onclick="apagarMensagem('${h.ID_Produto}', '${msgId}', '${hPlatKey}')">${hPlatKey === 'whatsapp' ? '🧹 Limpar' : '🗑️ Excluir'}</button>
       </div>
     </div>`;
       }).join('');
     }
 
     // -- AÇÕES DO BOT --
-    async function qSend(id, btnEl) {
+    async function qSend(id, btnEl, plataformas = activePlatform) {
       const p = prods.find(x => x.ID === id);
       if (!p) return;
       if (btnEl) btnEl.disabled = true;
-      toast('Enviando para o Telegram…', 'warn');
+      const selected = platformPayload(plataformas);
+      toast(`Enviando para ${platformLabel(selected)}…`, 'warn');
 
       const isUrg = String(p.Urgente || '').toLowerCase() === 'sim';
 
@@ -2965,11 +3117,21 @@
           imagem: p.Imagem || '',
           preco: fp(p.Preço) || '',
           categoria: p.Categoria || '',
-          urgente: isUrg
+          urgente: isUrg,
+          plataformas: selected
         });
         if (j.status) {
+          const results = j.results || {};
+          for (const [platform, result] of Object.entries(results)) {
+            await apiPost({
+              action: 'registrar_postagem',
+              id_produto: p.ID,
+              message_id: String(result.message_id || ''),
+              status: result.ok ? 'sucesso' : 'erro',
+              plataforma: platform === 'whatsapp' ? 'WhatsApp' : 'Telegram'
+            });
+          }
           toast(isUrg ? '🔥 Oferta URGENTE enviada!' : 'Enviado com sucesso!');
-          await apiPost({ action: 'registrar_postagem', id_produto: p.ID, message_id: String(j.message_id || ''), status: 'sucesso' });
           await loadAll();
         } else {
           toast('Falha no envio (Bot retornou false)', 'err');
@@ -2990,7 +3152,7 @@
       const oldHtml = btn ? btn.innerHTML : '';
       if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Disparando…'; }
 
-      toast('Disparando agendamento no Telegram…', 'warn');
+      toast(`Disparando agendamento em ${platformLabel(cronPlatformValue(cron.Plataformas))}…`, 'warn');
       addLog(`Disparo manual iniciado: ${cron.Horario || 'sem horário'} | ${cron.ID}`, 'info');
 
       try {
@@ -2998,11 +3160,12 @@
         const j = await botFetch('/disparar-cron', {
           cron_id: cron.ID || id,
           template: cron.Template || '',
-          imagem: cron.Imagem || ''
+          imagem: cron.Imagem || '',
+          plataformas: cron.Plataformas || 'telegram'
         });
 
         if (j.status) {
-          toast('⏰ Agendamento disparado com sucesso no Telegram!');
+          toast('⏰ Agendamento disparado com sucesso!');
           addLog(`Cron ${cron.ID} disparado manualmente. message_id=${j.message_id || '—'}`, 'ok');
           try { await loadHistorico(); } catch (_) { }
         } else {
@@ -3021,41 +3184,66 @@
       const btn = document.getElementById('btn-prox'), sp = document.getElementById('prox-sp');
       btn.disabled = true; sp.classList.add('on');
       try {
-        const j = await botFetch('/forcar-postagem', {});
+        const j = await botFetch('/forcar-postagem', { plataformas: activePlatform });
         toast(j.status === 'nenhum_pendente' ? 'A fila está vazia.' : 'Primeiro da fila enviado!');
         await loadAll();
       } catch (e) { toast(e.message, 'err') } finally { btn.disabled = false; sp.classList.remove('on') }
     }
 
-    async function apagarTelegram(id, msgId) {
+    async function apagarMensagem(id, msgId, plataforma = 'telegram') {
+      const isWhatsapp = normalizePlatformKey(plataforma) === 'whatsapp';
       if (!msgId) return toast('Sem message_id salvo.', 'warn');
+
+      if (isWhatsapp) {
+        if (!confirm('A API oficial do WhatsApp não permite apagar a mensagem enviada. Deseja limpar apenas o histórico e retornar para pendente?')) return;
+        try {
+          await apiPost({ action: 'apagar_historico', id_produto: id, message_id: msgId, plataforma: 'WhatsApp' });
+          toast('Histórico do WhatsApp limpo.');
+          await loadAll(); await loadHistorico();
+        } catch (err) { toast('Erro ao limpar histórico.', 'err'); }
+        return;
+      }
+
       if (!confirm('Apagar do canal Telegram e retornar para a fila de Pendentes?')) return;
       let botOk = false;
       try {
-        await botFetch('/apagar-oferta', { id_produto: id, message_id: msgId });
+        await botFetch('/apagar-oferta', { id_produto: id, message_id: msgId, plataforma: 'telegram' });
         botOk = true;
       } catch (e) {
         if (e.message.includes("not found")) botOk = true; else toast(e.message, 'err');
       }
       if (botOk) {
-        try { await apiPost({ action: 'apagar_historico', id_produto: id, message_id: msgId }); toast('Apagado e restaurado!'); await loadAll(); await loadHistorico(); }
+        try { await apiPost({ action: 'apagar_historico', id_produto: id, message_id: msgId, plataforma: 'Telegram' }); toast('Apagado e restaurado!'); await loadAll(); await loadHistorico(); }
         catch (err) { toast('Erro ao limpar histórico.', 'err'); }
       }
     }
 
-    async function apagarCron(cronId, msgId) {
+    function apagarTelegram(id, msgId) { return apagarMensagem(id, msgId, 'telegram'); }
+
+    async function apagarCron(cronId, msgId, plataforma = 'telegram') {
+      const isWhatsapp = normalizePlatformKey(plataforma) === 'whatsapp';
       if (!msgId) return toast('Sem message_id salvo — mensagem já pode ter expirado.', 'warn');
+
+      if (isWhatsapp) {
+        if (!confirm('Limpar apenas o histórico deste banner do WhatsApp?')) return;
+        try {
+          await apiPost({ action: 'apagar_historico', id_produto: cronId, message_id: msgId, plataforma: 'WhatsApp' });
+          toast('Histórico do banner limpo.'); await loadHistorico();
+        } catch (err) { toast('Erro ao limpar histórico.', 'err'); }
+        return;
+      }
+
       if (!confirm('Apagar esta mensagem do canal Telegram?')) return;
       let botOk = false;
       try {
-        await botFetch('/apagar-oferta', { message_id: msgId });
+        await botFetch('/apagar-oferta', { message_id: msgId, plataforma: 'telegram' });
         botOk = true;
       } catch (e) {
         if (e.message.includes("not found")) botOk = true; else toast(e.message, 'err');
       }
       if (botOk) {
         try {
-          await apiPost({ action: 'apagar_historico', id_produto: cronId, message_id: msgId });
+          await apiPost({ action: 'apagar_historico', id_produto: cronId, message_id: msgId, plataforma: 'Telegram' });
           toast('Banner apagado do canal!'); await loadHistorico();
         } catch (err) { toast('Erro ao limpar histórico.', 'err'); }
       }
@@ -3064,14 +3252,14 @@
     // -- EDIÇÃO PRODUTO (MODAL) --
     function openEdit(id) {
       const p = prods.find(x => x.ID === id); if (!p) return;
-      document.getElementById('e-id').value = id; document.getElementById('e-st').value = p.EnvTelegram || 'pendente'; document.getElementById('e-site').value = p.Status || 'pendente'; document.getElementById('e-pr').value = p.Prioridade || 'média'; document.getElementById('e-cat').value = p.Categoria || ''; document.getElementById('e-com').value = p['Comentário'] || '';
+      document.getElementById('e-id').value = id; document.getElementById('e-st').value = p.EnvTelegram || 'pendente'; if(document.getElementById('e-wa')) document.getElementById('e-wa').value = p.EnvWhatsapp || 'pendente'; document.getElementById('e-site').value = p.Status || 'pendente'; document.getElementById('e-pr').value = p.Prioridade || 'média'; document.getElementById('e-cat').value = p.Categoria || ''; document.getElementById('e-com').value = p['Comentário'] || '';
       document.getElementById('modal-edit').classList.add('open');
     }
     function closeModal() { document.getElementById('modal-edit').classList.remove('open') }
     async function saveEdit() {
       const id = document.getElementById('e-id').value, btn = document.getElementById('btn-save-edit'), sp = document.getElementById('save-sp'); btn.disabled = true; sp.classList.add('on');
       try {
-        const j = await apiPost({ action: 'atualizar', id, campos: { 'EnvTelegram': document.getElementById('e-st').value, 'Status': document.getElementById('e-site').value, 'Prioridade': document.getElementById('e-pr').value, 'Categoria': document.getElementById('e-cat').value, 'Comentário': document.getElementById('e-com').value } });
+        const j = await apiPost({ action: 'atualizar', id, campos: { 'EnvTelegram': document.getElementById('e-st').value, 'EnvWhatsapp': document.getElementById('e-wa') ? document.getElementById('e-wa').value : 'pendente', 'Status': document.getElementById('e-site').value, 'Prioridade': document.getElementById('e-pr').value, 'Categoria': document.getElementById('e-cat').value, 'Comentário': document.getElementById('e-com').value } });
         if (j.status === 'sucesso') { toast('Atualizado!'); closeModal(); await loadAll(); }
       } catch (e) { toast('Erro ao salvar', 'err') } finally { btn.disabled = false; sp.classList.remove('on') }
     }
@@ -3114,14 +3302,14 @@
       sp.classList.remove('on'); res.style.display = 'block';
     }
 
-    function openDrawer() { document.getElementById('drawer').classList.add('open'); const sel = document.getElementById('d-sel'); sel.innerHTML = '<option value="">— Em Branco —</option>'; prods.slice(0, 25).forEach(p => sel.innerHTML += `<option value="${p.ID}">${esc((p.Título || '').substring(0, 32))}</option>`); }
+    function openDrawer() { document.getElementById('drawer').classList.add('open'); const dp = document.getElementById('d-plats'); if (dp) dp.value = activePlatform === 'ambos' ? 'ambos' : activePlatform; const sel = document.getElementById('d-sel'); sel.innerHTML = '<option value="">— Em Branco —</option>'; prods.slice(0, 25).forEach(p => sel.innerHTML += `<option value="${p.ID}">${esc((p.Título || '').substring(0, 32))}</option>`); }
     function closeDrawer() { document.getElementById('drawer').classList.remove('open') }
     function onDrSel() { const p = prods.find(x => x.ID === document.getElementById('d-sel').value); if (p) { document.getElementById('d-lnk').value = p.Link || ''; document.getElementById('d-tit').value = p.Título || ''; document.getElementById('d-pre').value = fp(p.Preço); document.getElementById('d-img').value = p.Imagem || ''; } }
     async function sendManual() {
-      const titulo = document.getElementById('d-tit').value, link = document.getElementById('d-lnk').value, imagem = document.getElementById('d-img').value, preco = document.getElementById('d-pre').value;
+      const titulo = document.getElementById('d-tit').value, link = document.getElementById('d-lnk').value, imagem = document.getElementById('d-img').value, preco = document.getElementById('d-pre').value, plataformas = document.getElementById('d-plats')?.value || activePlatform;
       if (!titulo || !link) return toast('Título e Link obrigatórios', 'err');
       const btn = document.getElementById('btn-snd'), sp = document.getElementById('snd-sp'); btn.disabled = true; sp.classList.add('on');
-      try { const j = await botFetch('/enviar-oferta', { titulo, link, imagem, preco }); if (j.status) { toast('Avulso enviado!'); closeDrawer(); loadAll(); } } catch (e) { toast(e.message, 'err') } finally { btn.disabled = false; sp.classList.remove('on') }
+      try { const j = await botFetch('/enviar-oferta', { titulo, link, imagem, preco, plataformas }); if (j.status) { toast('Avulso enviado!'); closeDrawer(); loadAll(); } } catch (e) { toast(e.message, 'err') } finally { btn.disabled = false; sp.classList.remove('on') }
     }
 
     async function checkBot() {
@@ -3171,5 +3359,4 @@
     };
   </script>
 </body>
-
 </html>
