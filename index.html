@@ -1495,7 +1495,7 @@
 
     .platform-switch {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 6px;
       padding: 0 10px 12px;
     }
@@ -1529,6 +1529,52 @@
       background: rgba(34, 197, 94, .12);
       color: var(--green);
       border: 1px solid rgba(34, 197, 94, .22);
+    }
+
+
+    .b-manual {
+      background: rgba(201, 146, 10, .13);
+      color: var(--yellow);
+      border: 1px solid rgba(201, 146, 10, .25);
+    }
+
+    .manual-assist-box {
+      background: linear-gradient(135deg, var(--yellow-l), transparent 70%);
+      border: 1.5px dashed rgba(201, 146, 10, .42);
+      border-radius: var(--r-lg);
+      padding: 18px;
+      margin-top: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .manual-message {
+      min-height: 250px;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      resize: vertical;
+    }
+
+    .manual-actions-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .manual-preview-img {
+      width: 100%;
+      max-height: 180px;
+      object-fit: cover;
+      border-radius: var(--r);
+      border: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    @media (max-width: 720px) {
+      .platform-switch { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .manual-actions-grid { grid-template-columns: 1fr; }
     }
 
 
@@ -2046,6 +2092,7 @@
     .platform-chip[data-platform-chip="telegram"]::before { content: '✈️'; }
     .platform-chip[data-platform-chip="whatsapp"]::before { content: '🟢'; }
     .platform-chip[data-platform-chip="ambos"]::before { content: '🔁'; }
+    .platform-chip[data-platform-chip="whatsapp_manual"]::before { content: '🧾'; }
 
     .platform-chip::after {
       content: 'Canal de envio';
@@ -2060,7 +2107,8 @@
       letter-spacing: .08em;
     }
 
-    .platform-chip[data-platform-chip="ambos"]::after { content: 'Disparo simultâneo'; }
+    .platform-chip[data-platform-chip="ambos"]::after { content: 'TG + API'; }
+    .platform-chip[data-platform-chip="whatsapp_manual"]::after { content: 'Copiar p/ grupo'; }
     .platform-chip.active {
       transform: translateY(-1px);
       background: linear-gradient(135deg, var(--accent-l), var(--surface));
@@ -2594,10 +2642,13 @@
             <span>Telegram</span>
           </button>
           <button class="platform-chip" data-platform-chip="whatsapp" onclick="setPlatform('whatsapp')">
-            <span>WhatsApp</span>
+            <span>WA API</span>
+          </button>
+          <button class="platform-chip" data-platform-chip="whatsapp_manual" onclick="setPlatform('whatsapp_manual')">
+            <span>WA Grupo</span>
           </button>
           <button class="platform-chip" data-platform-chip="ambos" onclick="setPlatform('ambos')">
-            <span>Ambos</span>
+            <span>TG + API</span>
           </button>
         </div>
 
@@ -2639,12 +2690,13 @@
         <section class="mode-center" aria-label="Modo de disparo ativo">
           <div class="mode-copy">
             <strong>Central de Disparo</strong>
-            <span>Escolha se as ações do painel serão aplicadas ao Telegram, WhatsApp ou aos dois canais.</span>
+            <span>Escolha entre envio automático oficial, preparo manual para grupo ou disparo simultâneo Telegram + WhatsApp API.</span>
           </div>
           <div class="mode-tabs">
             <button class="mode-tab" data-platform-chip="telegram" onclick="setPlatform('telegram')">✈️ Telegram</button>
-            <button class="mode-tab" data-platform-chip="whatsapp" onclick="setPlatform('whatsapp')">🟢 WhatsApp</button>
-            <button class="mode-tab" data-platform-chip="ambos" onclick="setPlatform('ambos')">🔁 Ambos</button>
+            <button class="mode-tab" data-platform-chip="whatsapp" onclick="setPlatform('whatsapp')">🟢 WhatsApp API</button>
+            <button class="mode-tab" data-platform-chip="whatsapp_manual" onclick="setPlatform('whatsapp_manual')">🧾 Grupo Manual</button>
+            <button class="mode-tab" data-platform-chip="ambos" onclick="setPlatform('ambos')">🔁 TG + WA API</button>
           </div>
         </section>
 
@@ -2776,7 +2828,8 @@
               <select id="h-platform" style="width:150px" onchange="filterHistorico()">
                 <option value="">Todas</option>
                 <option value="Telegram">Telegram</option>
-                <option value="WhatsApp">WhatsApp</option>
+                <option value="WhatsApp">WhatsApp API</option>
+                <option value="WhatsApp Manual">WhatsApp Grupo Manual</option>
               </select>
               <input id="h-s" placeholder="🔍 Filtrar…" style="width:220px" oninput="filterHistorico()">
               <button class="btn btn-ghost btn-sm" onclick="loadHistorico()">↺ Recarregar</button>
@@ -2919,7 +2972,8 @@
                 </div>
                 <div class="card-body fg">
                   <div class="fg2"><label>Telegram Group Link</label><input id="c-grp" placeholder="https://t.me/…"></div>
-                  <div class="fg2"><label>Website / Catálogo</label><input id="c-sit" placeholder="https://…"></div>
+                  <div class="fg2"><label>WhatsApp Web / Grupo Manual</label><input id="c-wagrp" placeholder="https://web.whatsapp.com/ ou link do grupo"></div>
+                  <div class="fg2 full"><label>Website / Catálogo</label><input id="c-sit" placeholder="https://…"></div>
                 </div>
               </div>
             </div>
@@ -3031,8 +3085,9 @@
         <label>Plataforma(s) do Agendamento</label>
         <select id="c-plats">
           <option value="telegram">📱 Apenas Telegram</option>
-          <option value="whatsapp">🟢 Apenas WhatsApp</option>
-          <option value="ambos">🔁 Telegram + WhatsApp</option>
+          <option value="whatsapp">🟢 WhatsApp API (individual)</option>
+          <option value="whatsapp_manual">🧾 WhatsApp Grupo Manual</option>
+          <option value="ambos">🔁 Telegram + WhatsApp API</option>
         </select>
         <div class="hint">O WhatsApp usa a Cloud API oficial da Meta e envia para os destinatários configurados no backend.</div>
       </div>
@@ -3071,6 +3126,39 @@
     </div>
   </div>
 
+  <!-- ══ MODAL WHATSAPP GRUPO MANUAL ════════════════════════════════════════ -->
+  <div class="overlay" id="modal-manual-wa">
+    <div class="modal" style="width:720px">
+      <div class="mhead">
+        <div>
+          <div class="mtitle">🧾 WhatsApp Grupo Manual</div>
+          <div class="hint">Copie a mensagem pronta, abra o WhatsApp Web e envie no grupo de ofertas.</div>
+        </div>
+        <button class="mclose" onclick="closeManualWaModal()">✕</button>
+      </div>
+      <div class="manual-assist-box">
+        <div style="display:grid;grid-template-columns:1fr 220px;gap:14px;align-items:start" class="manual-compose-grid">
+          <div>
+            <label style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--text2);letter-spacing:.08em">Mensagem pronta</label>
+            <textarea id="manual-wa-text" class="manual-message"></textarea>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--text2);letter-spacing:.08em">Mídia</label>
+            <img id="manual-wa-img" class="manual-preview-img" style="display:none" alt="Prévia da mídia">
+            <div id="manual-wa-img-empty" class="empty" style="padding:28px 10px;border:1px dashed var(--border2);border-radius:var(--r);margin-top:7px"><div class="eico">🖼️</div>Sem imagem</div>
+            <a id="manual-wa-img-link" class="btn btn-ghost btn-sm btn-full" href="#" target="_blank" rel="noopener" style="margin-top:10px;display:none">Abrir mídia</a>
+          </div>
+        </div>
+        <div class="manual-actions-grid">
+          <button class="btn btn-primary" onclick="copyManualWaText()">📋 Copiar mensagem</button>
+          <button class="btn btn-green" onclick="openManualWaWeb()">🟢 Abrir WhatsApp Web</button>
+          <button class="btn btn-ghost" onclick="markManualWaSent()">✅ Marcar como enviado</button>
+        </div>
+        <div class="hint" id="manual-wa-hint">Dica: envie a imagem primeiro no grupo e cole a mensagem como legenda, ou cole o texto após abrir o WhatsApp Web.</div>
+      </div>
+    </div>
+  </div>
+
   <!-- ══ DRAWER DISPARO AVULSO ══════════════════════════════════════════════ -->
   <div class="drawer" id="drawer">
     <div class="dhead">
@@ -3088,8 +3176,9 @@
         <label>Plataforma(s)</label>
         <select id="d-plats">
           <option value="telegram">📱 Telegram</option>
-          <option value="whatsapp">🟢 WhatsApp</option>
-          <option value="ambos">🔁 Ambos</option>
+          <option value="whatsapp">🟢 WhatsApp API (individual)</option>
+          <option value="whatsapp_manual">🧾 WhatsApp Grupo Manual</option>
+          <option value="ambos">🔁 Telegram + WhatsApp API</option>
         </select>
       </div>
       <div style="height:1px;background:var(--border);margin:18px 0"></div>
@@ -3112,7 +3201,7 @@
 
   <script>
     const CK = 'acd_cfg_v5';
-    const DCFG = { scriptUrl: '', botUrl: '', email: '', pass: '', secret: '', grupo: '', site: '' };
+    const DCFG = { scriptUrl: '', botUrl: '', email: '', pass: '', secret: '', grupo: '', waGroup: '', site: '' };
     const PANEL_META = {
       inicio: { title: 'Dashboard Analítico', icon: '🏠' },
       produtos: { title: 'Gestão de Inventário', icon: '📦' },
@@ -3122,11 +3211,12 @@
       config: { title: 'Configurações', icon: '⚙️' },
     };
 
-    let prods = [], cronData = [], historicoData = [], authTok = null, logEntries = [], _tt;
+    let prods = [], cronData = [], historicoData = [], authTok = null, logEntries = [], _tt, manualWaDraft = null;
     let activePlatform = localStorage.getItem('acd_platform_v6') || 'telegram';
 
     function normalizePlatformKey(value) {
-      const v = String(value || '').toLowerCase();
+      const v = String(value || '').toLowerCase().replace(/[\s-]+/g, '_');
+      if (['whatsapp_manual', 'wa_manual', 'zap_manual', 'manual', 'grupo_manual'].includes(v)) return 'whatsapp_manual';
       if (v === 'whatsapp' || v === 'wa' || v === 'zap') return 'whatsapp';
       if (v === 'ambos' || v === 'both' || v === 'all') return 'ambos';
       return 'telegram';
@@ -3134,17 +3224,30 @@
 
     function platformLabel(value = activePlatform) {
       const p = normalizePlatformKey(value);
-      if (p === 'whatsapp') return 'WhatsApp';
-      if (p === 'ambos') return 'Telegram + WhatsApp';
+      if (p === 'whatsapp') return 'WhatsApp API';
+      if (p === 'whatsapp_manual') return 'WhatsApp Grupo Manual';
+      if (p === 'ambos') return 'Telegram + WhatsApp API';
       return 'Telegram';
     }
 
     function platformField(value = activePlatform) {
-      return normalizePlatformKey(value) === 'whatsapp' ? 'EnvWhatsapp' : 'EnvTelegram';
+      const p = normalizePlatformKey(value);
+      return (p === 'whatsapp' || p === 'whatsapp_manual') ? 'EnvWhatsapp' : 'EnvTelegram';
     }
 
     function platformPayload(value = activePlatform) {
       return normalizePlatformKey(value);
+    }
+
+    function platformSheetLabel(value = activePlatform) {
+      const p = normalizePlatformKey(value);
+      if (p === 'whatsapp_manual') return 'WhatsApp Manual';
+      if (p === 'whatsapp') return 'WhatsApp';
+      return 'Telegram';
+    }
+
+    function isManualWhatsApp(value = activePlatform) {
+      return normalizePlatformKey(value) === 'whatsapp_manual';
     }
 
     function getPlatformResultsSummary(j = {}) {
@@ -3179,6 +3282,7 @@
 
     function cronPlatformValue(value) {
       const v = String(value || 'telegram').toLowerCase();
+      if (v.includes('manual') || v.includes('grupo')) return 'whatsapp_manual';
       if (v.includes('whatsapp') && v.includes('telegram')) return 'ambos';
       if (v.includes('whatsapp')) return 'whatsapp';
       return 'telegram';
@@ -3200,7 +3304,7 @@
         btn.classList.toggle('active', btn.dataset.platformChip === activePlatform);
       });
       const hp = document.getElementById('h-platform');
-      if (hp) hp.value = activePlatform === 'ambos' ? '' : platformLabel(activePlatform);
+      if (hp) hp.value = activePlatform === 'ambos' ? '' : platformSheetLabel(activePlatform);
     }
 
     // -- TEMA --
@@ -3430,7 +3534,7 @@
         document.getElementById('s-fei').textContent = prods.filter(p => p.EnvTelegram === 'feito' || p.EnvWhatsapp === 'feito').length;
         document.getElementById('s-pen').textContent = prods.filter(p => p.EnvTelegram === 'pendente' || (p.EnvWhatsapp || 'pendente') === 'pendente').length;
       } else {
-        document.getElementById('s-fei').textContent = prods.filter(p => p[field] === 'feito').length;
+        document.getElementById('s-fei').textContent = prods.filter(p => p[field] === 'feito' || (isManualWhatsApp() && p[field] === 'preparado')).length;
         document.getElementById('s-pen').textContent = prods.filter(p => (p[field] || 'pendente') === 'pendente').length;
       }
       document.getElementById('s-site').textContent = prods.filter(p => p.Status === 'feito' || p.Status === 'sim').length;
@@ -3447,10 +3551,10 @@
 
     function sb(s, label = '') {
       const status = String(s || 'pendente').toLowerCase();
-      const statusTxt = { feito: 'enviado', pendente: 'pendente', pausado: 'pausado', erro: 'erro' }[status] || status;
-      const statusCls = { feito: 'b-done', pendente: 'b-pend', pausado: 'b-pau', erro: 'b-no' }[status] || 'b-pend';
+      const statusTxt = { feito: 'enviado', pendente: 'pendente', pausado: 'pausado', erro: 'erro', preparado: 'preparado' }[status] || status;
+      const statusCls = { feito: 'b-done', pendente: 'b-pend', pausado: 'b-pau', erro: 'b-no', preparado: 'b-manual' }[status] || 'b-pend';
       const labelKey = String(label || '').toLowerCase();
-      const platformCls = labelKey.includes('whatsapp') ? 'b-wa' : (labelKey.includes('telegram') ? 'b-tg' : statusCls);
+      const platformCls = labelKey.includes('manual') ? 'b-manual' : (labelKey.includes('whatsapp') ? 'b-wa' : (labelKey.includes('telegram') ? 'b-tg' : statusCls));
       const short = labelKey.includes('whatsapp') ? 'WA' : (labelKey.includes('telegram') ? 'TG' : '');
       return `<span class="badge ${platformCls}" title="${label || 'status'}: ${statusTxt}">${short ? short + ' · ' : ''}${statusTxt}</span>`;
     }
@@ -3757,7 +3861,7 @@
         const isCron = (h.ID_Produto || '').startsWith('CRON_');
         const isCronManual = (h.ID_Produto || '').startsWith('CRON_MANUAL_');
         const hPlat = h.Plataforma || 'Telegram';
-        const hPlatKey = hPlat.toLowerCase() === 'whatsapp' ? 'whatsapp' : 'telegram';
+        const hPlatKey = hPlat.toLowerCase().includes('manual') ? 'whatsapp_manual' : (hPlat.toLowerCase().includes('whatsapp') ? 'whatsapp' : 'telegram');
 
         if (isCron) {
           return `<div class="hist-card">
@@ -3784,7 +3888,7 @@
         ${msgId ? `<div style="font-size:10px;color:var(--text3);margin-top:5px;font-family:var(--mono)">msg_id: ${esc(msgId)}</div>` : ''}
       </div>
       <div class="hist-card-footer">
-        <button class="btn btn-ghost btn-xs" onclick="qSend('${h.ID_Produto}', null, '${hPlatKey}')">🔄 Reenviar</button>
+        ${hPlatKey === 'whatsapp_manual' ? `<button class="btn btn-green btn-xs" onclick="openManualWaFromHistory('${h.ID_Produto}')">🧾 Preparar</button>` : `<button class="btn btn-ghost btn-xs" onclick="qSend('${h.ID_Produto}', null, '${hPlatKey}')">🔄 Reenviar</button>`}
         <button class="btn btn-danger btn-xs" onclick="apagarMensagem('${h.ID_Produto}', '${msgId}', '${hPlatKey}')">${hPlatKey === 'whatsapp' ? '🧹 Limpar' : '🗑️ Excluir'}</button>
       </div>
     </div>`;
@@ -3817,12 +3921,13 @@
             action: 'registrar_postagem',
             id_produto: p.ID,
             message_id: String(result.message_id || ''),
-            status: result.ok ? 'sucesso' : 'erro',
-            plataforma: platform === 'whatsapp' ? 'WhatsApp' : 'Telegram'
+            status: result.status || (result.ok ? 'sucesso' : 'erro'),
+            plataforma: platformSheetLabel(platform)
           });
         }
         logPlatformIssues(j, 'Oferta');
-        toastPlatformResult(j, isUrg ? '🔥 Oferta URGENTE enviada!' : 'Enviado com sucesso!');
+        if (results.whatsapp_manual?.ok) openManualWaForProduct(p, results.whatsapp_manual);
+        toastPlatformResult(j, isUrg ? '🔥 Oferta URGENTE processada!' : 'Envio processado!');
         await loadAll();
       } catch (e) { toast(e.message, 'err'); } finally { if (btnEl) btnEl.disabled = false; }
     }
@@ -3853,7 +3958,8 @@
         });
 
         logPlatformIssues(j, `Cron ${cron.ID}`);
-        toastPlatformResult(j, '⏰ Agendamento disparado com sucesso!');
+        if (j.results?.whatsapp_manual?.ok || cronPlatformValue(cron.Plataformas) === 'whatsapp_manual') openManualWaForCron(cron, j.results?.whatsapp_manual || {});
+        toastPlatformResult(j, '⏰ Agendamento processado com sucesso!');
         addLog(`Cron ${cron.ID} retorno=${j.status || '—'} message_id=${j.message_id || '—'}`, j.ok_all || j.status === 'sucesso' ? 'ok' : 'warn');
         try { await loadHistorico(); } catch (_) { }
       } catch (e) {
@@ -3873,14 +3979,18 @@
           toast('A fila está vazia.', 'warn');
         } else {
           logPlatformIssues(j, 'Fila');
-          toastPlatformResult(j, 'Primeiro da fila enviado!');
+          toastPlatformResult(j, 'Primeiro da fila processado!');
+          if (j.results?.whatsapp_manual?.ok && j.produto_id) {
+            const p = prods.find(x => String(x.ID) === String(j.produto_id));
+            if (p) openManualWaForProduct(p, j.results.whatsapp_manual);
+          }
         }
         await loadAll();
       } catch (e) { toast(e.message, 'err') } finally { btn.disabled = false; sp.classList.remove('on') }
     }
 
     async function apagarMensagem(id, msgId, plataforma = 'telegram') {
-      const isWhatsapp = normalizePlatformKey(plataforma) === 'whatsapp';
+      const isWhatsapp = ['whatsapp','whatsapp_manual'].includes(normalizePlatformKey(plataforma));
       if (!msgId) return toast('Sem message_id salvo.', 'warn');
 
       if (isWhatsapp) {
@@ -3910,7 +4020,7 @@
     function apagarTelegram(id, msgId) { return apagarMensagem(id, msgId, 'telegram'); }
 
     async function apagarCron(cronId, msgId, plataforma = 'telegram') {
-      const isWhatsapp = normalizePlatformKey(plataforma) === 'whatsapp';
+      const isWhatsapp = ['whatsapp','whatsapp_manual'].includes(normalizePlatformKey(plataforma));
       if (!msgId) return toast('Sem message_id salvo — mensagem já pode ter expirado.', 'warn');
 
       if (isWhatsapp) {
@@ -3954,7 +4064,7 @@
     }
 
     // -- CONFIGS & DRAWER MANUAL --
-    function loadCfgUI() { const c = getCfg(); document.getElementById('c-sc').value = c.scriptUrl; document.getElementById('c-bot').value = c.botUrl; document.getElementById('c-em').value = c.email; document.getElementById('c-pw').value = c.pass; document.getElementById('c-sec').value = c.secret; document.getElementById('c-grp').value = c.grupo; document.getElementById('c-sit').value = c.site; }
+    function loadCfgUI() { const c = getCfg(); document.getElementById('c-sc').value = c.scriptUrl; document.getElementById('c-bot').value = c.botUrl; document.getElementById('c-em').value = c.email; document.getElementById('c-pw').value = c.pass; document.getElementById('c-sec').value = c.secret; document.getElementById('c-grp').value = c.grupo; if(document.getElementById('c-wagrp')) document.getElementById('c-wagrp').value = c.waGroup || ''; document.getElementById('c-sit').value = c.site; }
     function saveConf() {
       try {
         sCfg({
@@ -3964,6 +4074,7 @@
           pass: document.getElementById('c-pw').value,
           secret: document.getElementById('c-sec').value,
           grupo: document.getElementById('c-grp').value.trim(),
+          waGroup: document.getElementById('c-wagrp') ? document.getElementById('c-wagrp').value.trim() : '',
           site: document.getElementById('c-sit').value.trim()
         });
         loadCfgUI();
@@ -4001,10 +4112,125 @@
       try {
         const j = await botFetch('/enviar-oferta', { titulo, link, imagem, preco, plataformas });
         logPlatformIssues(j, 'Avulso');
-        toastPlatformResult(j, 'Avulso enviado!');
-        if (getPlatformResultsSummary(j).okAny) closeDrawer();
+        if (j.results?.whatsapp_manual?.ok) openManualWaForFields({ titulo, link, imagem, preco, categoria: '' }, j.results.whatsapp_manual);
+        toastPlatformResult(j, 'Avulso processado!');
+        if (getPlatformResultsSummary(j).okAny && !j.results?.whatsapp_manual?.ok) closeDrawer();
         loadAll();
       } catch (e) { toast(e.message, 'err') } finally { btn.disabled = false; sp.classList.remove('on') }
+    }
+
+
+
+    // -- WHATSAPP GRUPO MANUAL ASSISTIDO --
+    function buildManualWaText(data = {}) {
+      const cfg = getCfg();
+      const titulo = data.titulo || data.Título || 'Produto';
+      const preco = data.preco || fp(data.Preço || '');
+      const categoria = data.categoria || data.Categoria || 'Geral';
+      const link = data.link || data.Link || '';
+      const site = cfg.site || DCFG.site || 'https://achadinhosdiarios.github.io/Browse/';
+      const lines = [
+        '🛍 ACHADINHO DO DIA!',
+        '',
+        `✨ ${titulo}`,
+        '',
+        `🏷 Categoria: ${categoria || 'Geral'}`,
+        `💰 Por apenas ${preco || 'Consulte'}`,
+        '',
+        '👇 Confira abaixo:',
+        '',
+        link ? `🛒 Ver na Shopee: ${link}` : '',
+        site ? `🌐 Mais ofertas: ${site}` : ''
+      ].filter((line, idx, arr) => line !== '' || arr[idx - 1] !== '');
+      return lines.join('\n').trim();
+    }
+
+    function openManualWaModal(draft) {
+      manualWaDraft = draft || {};
+      const text = manualWaDraft.text || buildManualWaText(manualWaDraft);
+      const img = manualWaDraft.imagem || manualWaDraft.Imagem || '';
+      const txt = document.getElementById('manual-wa-text');
+      const imgEl = document.getElementById('manual-wa-img');
+      const empty = document.getElementById('manual-wa-img-empty');
+      const linkEl = document.getElementById('manual-wa-img-link');
+      if (txt) txt.value = text;
+      if (img) {
+        imgEl.src = img;
+        imgEl.style.display = 'block';
+        empty.style.display = 'none';
+        linkEl.href = img;
+        linkEl.style.display = 'inline-flex';
+      } else {
+        imgEl.style.display = 'none';
+        imgEl.removeAttribute('src');
+        empty.style.display = 'flex';
+        linkEl.style.display = 'none';
+      }
+      document.getElementById('modal-manual-wa').classList.add('open');
+      addLog('WhatsApp Grupo Manual: mensagem preparada para cópia.', 'warn');
+    }
+
+    function closeManualWaModal() { document.getElementById('modal-manual-wa').classList.remove('open'); }
+
+    function openManualWaForProduct(p, result = {}) {
+      openManualWaModal({ ...p, produtoId: p.ID, message_id: result.message_id || '', status: result.status || 'preparado' });
+    }
+
+    function openManualWaForFields(fields = {}, result = {}) {
+      openManualWaModal({ ...fields, message_id: result.message_id || '', status: result.status || 'preparado' });
+    }
+
+    function openManualWaForCron(cron, result = {}) {
+      const text = (cron.Template || '').replace(/<br>/g, '\n').trim() || '🛍 ACHADINHOS DIÁRIOS\n\nConfira as ofertas do dia no nosso catálogo.';
+      const img = cron.Imagem ? driveUrl(cron.Imagem) : '';
+      openManualWaModal({ produtoId: cron.ID, titulo: `Agendamento ${cron.Horario || ''}`, text, imagem: img, message_id: result.message_id || '' });
+    }
+
+    function openManualWaFromHistory(id) {
+      const p = prods.find(x => String(x.ID) === String(id));
+      if (p) return openManualWaForProduct(p, { status: 'preparado' });
+      toast('Produto não encontrado no inventário atual.', 'warn');
+    }
+
+    async function copyManualWaText() {
+      const txt = document.getElementById('manual-wa-text')?.value || '';
+      if (!txt.trim()) return toast('Mensagem vazia.', 'warn');
+      try {
+        await navigator.clipboard.writeText(txt);
+        toast('Mensagem copiada para a área de transferência.', 'ok');
+      } catch (e) {
+        const el = document.getElementById('manual-wa-text');
+        el.focus(); el.select(); document.execCommand('copy');
+        toast('Mensagem selecionada/copieda. Cole no WhatsApp Web.', 'ok');
+      }
+    }
+
+    function openManualWaWeb() {
+      const cfg = getCfg();
+      const url = cfg.waGroup || 'https://web.whatsapp.com/';
+      window.open(url, '_blank', 'noopener');
+    }
+
+    async function markManualWaSent() {
+      if (!manualWaDraft?.produtoId) {
+        toast('Mensagem avulsa: sem produto/agendamento para registrar.', 'warn');
+        return;
+      }
+      try {
+        await apiPost({
+          action: 'registrar_postagem',
+          id_produto: manualWaDraft.produtoId,
+          message_id: manualWaDraft.message_id || `MANUAL_SENT_${Date.now()}`,
+          status: 'sucesso',
+          plataforma: 'WhatsApp Manual'
+        });
+        toast('Marcado como enviado manualmente.', 'ok');
+        closeManualWaModal();
+        await loadAll();
+        try { await loadHistorico(); } catch (_) { }
+      } catch (e) {
+        toast('Erro ao registrar envio manual.', 'err');
+      }
     }
 
     async function checkBot() {
