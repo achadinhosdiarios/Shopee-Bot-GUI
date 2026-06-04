@@ -999,15 +999,39 @@ function readManageProductsCache() {
       sp.classList.remove('on'); res.style.display = 'block';
     }
 
-    function openDrawer() { document.getElementById('drawer').classList.add('open'); const dp = document.getElementById('d-plats'); if (dp) dp.value = activePlatform === 'ambos' ? 'ambos' : activePlatform; const sel = document.getElementById('d-sel'); sel.innerHTML = '<option value="">— Em Branco —</option>'; prods.slice(0, 25).forEach(p => sel.innerHTML += `<option value="${p.ID}">${esc((p.Título || '').substring(0, 32))}</option>`); }
+    function openDrawer() {
+      document.getElementById('drawer').classList.add('open');
+      const dp = document.getElementById('d-plats');
+      if (dp) dp.value = activePlatform === 'ambos' ? 'ambos' : activePlatform;
+      const sel = document.getElementById('d-sel');
+      sel.innerHTML = '<option value="">— Em Branco —</option>';
+      prods.slice(0, 25).forEach(p => {
+        const cat = p.Categoria ? ` · ${p.Categoria}` : '';
+        sel.innerHTML += `<option value="${p.ID}">${esc((p.Título || '').substring(0, 32))}${esc(cat)}</option>`;
+      });
+    }
     function closeDrawer() { document.getElementById('drawer').classList.remove('open') }
-    function onDrSel() { const p = prods.find(x => x.ID === document.getElementById('d-sel').value); if (p) { document.getElementById('d-lnk').value = p.Link || ''; document.getElementById('d-tit').value = p.Título || ''; document.getElementById('d-pre').value = fp(p.Preço); document.getElementById('d-img').value = p.Imagem || ''; } }
+    function onDrSel() {
+      const p = prods.find(x => x.ID === document.getElementById('d-sel').value);
+      if (p) {
+        document.getElementById('d-lnk').value = p.Link || '';
+        document.getElementById('d-tit').value = p.Título || '';
+        document.getElementById('d-cat').value = p.Categoria || '';
+        document.getElementById('d-pre').value = fp(p.Preço);
+        document.getElementById('d-img').value = p.Imagem || '';
+      }
+    }
     async function sendManual() {
-      const titulo = document.getElementById('d-tit').value, link = document.getElementById('d-lnk').value, imagem = document.getElementById('d-img').value, preco = document.getElementById('d-pre').value, plataformas = document.getElementById('d-plats')?.value || activePlatform;
+      const titulo = document.getElementById('d-tit').value,
+        link = document.getElementById('d-lnk').value,
+        categoria = document.getElementById('d-cat')?.value || '',
+        imagem = document.getElementById('d-img').value,
+        preco = document.getElementById('d-pre').value,
+        plataformas = document.getElementById('d-plats')?.value || activePlatform;
       if (!titulo || !link) return toast('Título e Link obrigatórios', 'err');
       const btn = document.getElementById('btn-snd'), sp = document.getElementById('snd-sp'); btn.disabled = true; sp.classList.add('on');
       try {
-        const j = await botFetch('/enviar-oferta', { titulo, link, imagem, preco, plataformas });
+        const j = await botFetch('/enviar-oferta', { titulo, link, imagem, preco, categoria, plataformas });
         logPlatformIssues(j, 'Avulso');
         toastPlatformResult(j, 'Avulso enviado!');
         if (getPlatformResultsSummary(j).okAny) closeDrawer();
