@@ -10,10 +10,15 @@ const CK = 'acd_cfg_v5';
     };
 
     let prods = [], cronData = [], historicoData = [], authTok = null, logEntries = [], _tt;
+    let productById = new Map(), productView = [], historyView = [];
+    let productPage = 1, historyPage = 1, previewProductId = null;
     let activePlatform = localStorage.getItem('acd_platform_v6') || 'telegram';
+    const PAGE_SIZE = 50;
     const MANAGE_PRODUCTS_CACHE_KEY = 'acd_manage_bot_products_v1';
     const MANAGE_PRODUCTS_CACHE_TTL = 5 * 60 * 1000;
-    let _filterTimer = null, _histFilterTimer = null;
+    const CRON_CACHE_TTL = 60 * 1000;
+    const HISTORY_CACHE_TTL = 2 * 60 * 1000;
+    let _filterTimer = null, _histFilterTimer = null, _globalSearchTimer = null, _loadAllPromise = null, _cronPromise = null, _historyPromise = null, _productSyncTimer = null, _cronsLoadedAt = 0, _historyLoadedAt = 0;
 
     
 function readManageProductsCache() {
@@ -52,6 +57,11 @@ function readManageProductsCache() {
     function filterHistoricoDebounced() {
       clearTimeout(_histFilterTimer);
       _histFilterTimer = setTimeout(filterHistorico, 120);
+    }
+
+    function globalSearchDebounced() {
+      clearTimeout(_globalSearchTimer);
+      _globalSearchTimer = setTimeout(applyGlobalSearch, 140);
     }
 
     function normalizePlatformKey(value) {
@@ -133,8 +143,22 @@ function readManageProductsCache() {
     }
 
     // -- TEMA --
-    function initTheme() { const s = localStorage.getItem('acd_theme_v5') || 'light'; document.documentElement.setAttribute('data-theme', s); }
-    function toggleTheme() { const c = document.documentElement.getAttribute('data-theme'); const n = c === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', n); localStorage.setItem('acd_theme_v5', n); addLog(`Tema: ${n}`, 'info'); }
+    function updateThemeButton(theme = document.documentElement.getAttribute('data-theme') || 'light') {
+      const btn = document.getElementById('btn-theme');
+      if (!btn) return;
+      const isDark = theme === 'dark';
+      btn.title = isDark ? 'Ativar tema claro' : 'Ativar tema escuro';
+      btn.setAttribute('aria-pressed', String(isDark));
+      btn.classList.toggle('is-dark', isDark);
+    }
+    function applyTheme(theme) {
+      const next = theme === 'dark' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('acd_theme_v5', next);
+      updateThemeButton(next);
+    }
+    function initTheme() { applyTheme(localStorage.getItem('acd_theme_v5') || 'light'); }
+    function toggleTheme() { const c = document.documentElement.getAttribute('data-theme'); const n = c === 'dark' ? 'light' : 'dark'; applyTheme(n); addLog(`Tema: ${n}`, 'info'); }
     initTheme();
 
     // -- INFRA & UTILS --
@@ -331,13 +355,25 @@ function readManageProductsCache() {
       const nav = document.querySelector(`.nav-item[data-panel="${id}"]`); if (nav) nav.classList.add('active');
       const meta = PANEL_META[id] || { title: id, icon: '•' };
       document.getElementById('ptitle').textContent = meta.title; document.getElementById('p-icon').textContent = meta.icon;
-      if (id === 'produtos') renderProds(prods);
+      if (id !== 'inicio') closeProductPreview();
+      else hideProductContext();
+      if (id === 'produtos') filterTbl(false);
       if (id === 'historico') loadHistorico();
       if (id === 'atividade') refreshStatus();
     }
 
     // -- CARREGAMENTO PRINCIPAL --
     async function loadAll(force = false) {
+      if (_loadAllPromise && !force) return _loadAllPromise;
+      _loadAllPromise = loadAllInternal(force);
+      try {
+        return await _loadAllPromise;
+      } finally {
+        _loadAllPromise = null;
+      }
+    }
+
+    async function loadAllInternal(force = false) {
       const btn = document.getElementById('btn-refresh');
       const sync = document.getElementById('last-sync');
       if (btn) btn.disabled = true;
@@ -348,8 +384,9 @@ function readManageProductsCache() {
 
       if (cached?.data?.length) {
         prods = cached.data.map(normalizeProductRow);
+        indexProducts();
         renderStats(); renderHome(); updateBadges();
-        if (document.getElementById('p-produtos')?.classList.contains('active')) filterTbl();
+        if (document.getElementById('p-produtos')?.classList.contains('active')) filterTbl(false);
         if (sync) sync.textContent = `Cache: ${new Date(cached.savedAt).toLocaleTimeString('pt-BR')}`;
         usingCache = true;
 
@@ -370,9 +407,10 @@ function readManageProductsCache() {
         }
 
         prods = lista.map(normalizeProductRow);
+        indexProducts();
         saveManageProductsCache(prods);
         renderStats(); renderHome(); updateBadges();
-        if (document.getElementById('p-produtos')?.classList.contains('active')) filterTbl();
+        if (document.getElementById('p-produtos')?.classList.contains('active')) filterTbl(false);
         if (sync) sync.textContent = `Sincronizado: ${new Date().toLocaleTimeString('pt-BR')}`;
         addLog(`DB sincronizado — ${prods.length} produtos.`, 'ok');
         await loadCrons();
@@ -429,6 +467,17 @@ function readManageProductsCache() {
       };
     }
 
+    function indexProducts() {
+      productById = new Map();
+      prods.forEach(p => {
+        if (p?.ID !== undefined && p.ID !== null && p.ID !== '') productById.set(String(p.ID), p);
+      });
+    }
+
+    function findProductById(id) {
+      return productById.get(String(id)) || prods.find(x => String(x.ID) === String(id));
+    }
+
     function renderStats() {
       const field = platformField();
       const pLabel = platformLabel();
@@ -465,6 +514,73 @@ function readManageProductsCache() {
     function fp(p) { const n = parseFloat(p); return isNaN(n) ? String(p || '') : 'R$ ' + n.toFixed(2).replace('.', ',') }
     function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }
     function attr(s) { return esc(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;') }
+    function svgIcon(name) {
+      const icons = {
+        send: '<path d="M22 2 11 13"></path><path d="m22 2-7 20-4-9-9-4Z"></path>',
+        flame: '<path d="M8.5 14.5A4.5 4.5 0 0 0 12 22a4.5 4.5 0 0 0 4.5-7.5c-.6-.7-1.1-1.5-1-2.5-1 .8-2.2 1.2-3.5 1-2-.3-3.2-1.7-3.5-4.5-2 1.7-3 3.7-3 6Z"></path><path d="M12 22a2.6 2.6 0 0 0 2.1-4.1c-.4.3-.9.5-1.5.5-1 0-1.7-.6-2-1.7-.8.8-1.2 1.6-1.2 2.5A2.6 2.6 0 0 0 12 22Z"></path>',
+        edit: '<path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>',
+        link: '<path d="M10 13a5 5 0 0 0 7.54.54l2-2a5 5 0 0 0-7.07-7.07l-1.15 1.15"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-2 2a5 5 0 0 0 7.07 7.07l1.15-1.15"></path>',
+        plus: '<path d="M12 5v14"></path><path d="M5 12h14"></path>',
+        close: '<path d="M18 6 6 18"></path><path d="m6 6 12 12"></path>',
+        refresh: '<path d="M20 7v5h-5"></path><path d="M20 12a8 8 0 1 1-2.35-5.66L20 8"></path>',
+        trash: '<path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 16H6L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path>',
+        play: '<path d="m8 5 11 7-11 7Z"></path>',
+        arrowLeft: '<path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path>',
+        arrowRight: '<path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path>',
+        save: '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"></path><path d="M17 21v-8H7v8"></path><path d="M7 3v5h8"></path>',
+        plug: '<path d="M12 22v-5"></path><path d="M8 7V2"></path><path d="M16 7V2"></path><path d="M6 7h12v5a6 6 0 0 1-12 0Z"></path>'
+      };
+      return `<svg class="svg-icon" viewBox="0 0 24 24" aria-hidden="true">${icons[name] || icons.plus}</svg>`;
+    }
+
+    function clampPage(page, totalPages) {
+      return Math.min(Math.max(Number(page) || 1, 1), Math.max(totalPages, 1));
+    }
+
+    function visiblePages(current, totalPages) {
+      if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+      const pages = new Set([1, totalPages, current, current - 1, current + 1]);
+      if (current <= 3) [2, 3, 4].forEach(p => pages.add(p));
+      if (current >= totalPages - 2) [totalPages - 3, totalPages - 2, totalPages - 1].forEach(p => pages.add(p));
+      return [...pages].filter(p => p >= 1 && p <= totalPages).sort((a, b) => a - b);
+    }
+
+    function renderPagination(targetId, total, page, onPageFn, label = 'itens') {
+      const el = document.getElementById(targetId);
+      if (!el) return;
+      const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      const safePage = clampPage(page, totalPages);
+      const start = total ? ((safePage - 1) * PAGE_SIZE) + 1 : 0;
+      const end = Math.min(safePage * PAGE_SIZE, total);
+
+      if (!total) {
+        el.innerHTML = '';
+        return;
+      }
+
+      const pages = visiblePages(safePage, totalPages);
+      let last = 0;
+      const pageButtons = pages.map(p => {
+        const gap = p - last > 1 ? '<span class="pager-ellipsis">...</span>' : '';
+        last = p;
+        return `${gap}<button class="pager-btn ${p === safePage ? 'active' : ''}" ${p === safePage ? 'disabled' : ''} onclick="${onPageFn}(${p})">${p}</button>`;
+      }).join('');
+
+      el.innerHTML = `
+        <div class="pager-summary">
+          <strong>${start}-${end}</strong> de ${total} ${label}
+          <span>50 por pagina</span>
+        </div>
+        <div class="pager-controls">
+          <button class="pager-btn pager-nav" ${safePage <= 1 ? 'disabled' : ''} onclick="${onPageFn}(${safePage - 1})">${svgIcon('arrowLeft')} Anterior</button>
+          <div class="pager-pages">${pageButtons}</div>
+          <button class="pager-btn pager-nav" ${safePage >= totalPages ? 'disabled' : ''} onclick="${onPageFn}(${safePage + 1})">Proxima ${svgIcon('arrowRight')}</button>
+        </div>`;
+    }
+
+    function scrollPanelList(id) {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 
     // -- INVENTÁRIO & DASHBOARD --
     function renderHome() {
@@ -484,7 +600,8 @@ function readManageProductsCache() {
         const image = p.Imagem
           ? `<img class="queue-img" src="${esc(p.Imagem)}" loading="lazy" decoding="async" onerror="this.outerHTML='<div class=&quot;queue-img&quot; style=&quot;display:grid;place-items:center;font-size:24px&quot;>🛍️</div>'">`
           : `<div class="queue-img" style="display:grid;place-items:center;font-size:24px">🛍️</div>`;
-        return `<div class="queue-card">
+        const safeId = attr(p.ID || '');
+        return `<div class="queue-card" role="button" tabindex="0" onclick="openProductPreview('${safeId}', event)" oncontextmenu="openProductContext('${safeId}', event)" onkeydown="if(event.key==='Enter'||event.key===' '){openProductPreview('${safeId}', event)}">
           ${image}
           <div class="queue-info">
             <div class="queue-name">${esc(p.Título)}</div>
@@ -497,30 +614,45 @@ function readManageProductsCache() {
             </div>
           </div>
           <div class="queue-actions">
-            <button class="ib${isUrg ? ' ib-urg' : ''}" title="${isUrg ? 'Desmarcar urgente' : 'Marcar urgente'}" onclick="toggleUrgente('${p.ID}', this)">${isUrg ? '🔥' : '🌡️'}</button>
-            <button class="ib" title="Enviar agora em ${platformLabel()}" onclick="qSend('${p.ID}', this)">✈️</button>
+            <button class="ib${isUrg ? ' ib-urg' : ''}" title="${isUrg ? 'Desmarcar urgente' : 'Marcar urgente'}" onclick="event.stopPropagation();toggleUrgente('${safeId}', this)">${svgIcon('flame')}</button>
+            <button class="ib" title="Enviar agora em ${platformLabel()}" onclick="event.stopPropagation();qSend('${safeId}', this)">${svgIcon('send')}</button>
           </div>
         </div>`;
       }).join('');
     }
 
     function renderProds(list) {
+      productView = Array.isArray(list) ? list : [];
       const wrap = document.getElementById('prod-tbl');
-      document.getElementById('q-count').textContent = `${list.length} registros`;
-      if (!list.length) {
+      const total = productView.length;
+      const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      productPage = clampPage(productPage, totalPages);
+      const startIndex = (productPage - 1) * PAGE_SIZE;
+      const pageItems = productView.slice(startIndex, startIndex + PAGE_SIZE);
+      const count = document.getElementById('q-count');
+      if (count) {
+        const start = total ? startIndex + 1 : 0;
+        const end = Math.min(startIndex + PAGE_SIZE, total);
+        count.textContent = total ? `${total} registros | ${start}-${end}` : '0 registros';
+      }
+
+      if (!total) {
         wrap.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="eico">📭</div>Nada encontrado.</div>';
+        renderPagination('prod-pagination', 0, productPage, 'setProductPage', 'produtos');
         return;
       }
-      wrap.innerHTML = list.map(p => {
+
+      wrap.innerHTML = pageItems.map((p, index) => {
         const isUrg = String(p.Urgente || '').toLowerCase() === 'sim';
         const img = p.Imagem ? `<img class="inv-img" src="${esc(p.Imagem)}" loading="lazy" decoding="async" onerror="this.outerHTML='<div class=&quot;inv-img-ph&quot;>🛍️</div>'">` : `<div class="inv-img-ph">🛍️</div>`;
+        const safeId = attr(p.ID || '');
         const idShort = esc(String(p.ID || '').substring(0, 8) || '—');
         const shop = esc(p.ShopId || '—');
         const item = esc(p.ItemId || '—');
         const comentario = esc(p['Comentário'] || 'Sem observações.');
         const data = esc(p.Data || '—');
-        const link = p.Link ? `<a class="btn btn-ghost btn-sm btn-icon-soft" href="${esc(p.Link)}" target="_blank" rel="noopener" title="Abrir link da oferta">🔗 Link</a>` : `<button class="btn btn-ghost btn-sm btn-icon-soft" disabled>🔗 Link</button>`;
-        return `<div class="inv-card">
+        const link = p.Link ? `<a class="btn btn-ghost btn-sm btn-icon-soft" href="${esc(p.Link)}" target="_blank" rel="noopener" title="Abrir link da oferta">${svgIcon('link')} Link</a>` : `<button class="btn btn-ghost btn-sm btn-icon-soft" disabled>${svgIcon('link')} Link</button>`;
+        return `<div class="inv-card" style="--i:${Math.min(index, 12)}">
           <div class="inv-img-wrap">${img}</div>
           <div class="inv-body">
             <div class="inv-topline">
@@ -542,18 +674,29 @@ function readManageProductsCache() {
             </div>
             <div class="inv-note">${comentario}</div>
             <div class="inv-actions">
-              <button class="btn btn-green btn-sm" onclick="qSend('${p.ID}', this)" title="Enviar em ${platformLabel()}">✈️ Enviar</button>
-              <button class="btn btn-ghost btn-sm ${isUrg ? 'ib-urg' : ''}" onclick="toggleUrgente('${p.ID}', this)" title="Alternar prioridade urgente">${isUrg ? '🔥 Urgente' : '🌡️ Prioridade'}</button>
-              <button class="btn btn-ghost btn-sm btn-icon-soft" onclick="openEdit('${p.ID}')">✏️ Editar</button>
+              <button class="btn btn-green btn-sm" onclick="qSend('${safeId}', this)" title="Enviar em ${platformLabel()}">${svgIcon('send')} Enviar</button>
+              <button class="btn btn-ghost btn-sm ${isUrg ? 'ib-urg' : ''}" onclick="toggleUrgente('${safeId}', this)" title="Alternar prioridade urgente">${svgIcon('flame')} ${isUrg ? 'Urgente' : 'Prioridade'}</button>
+              <button class="btn btn-ghost btn-sm btn-icon-soft" onclick="openEdit('${safeId}')">${svgIcon('edit')} Editar</button>
               ${link}
             </div>
           </div>
         </div>`;
       }).join('');
+      renderPagination('prod-pagination', total, productPage, 'setProductPage', 'produtos');
     }
 
-    function filterTbl() {
-      const q = normalizeSearchText(document.getElementById('q-s').value), st = document.getElementById('q-st').value, siteSt = document.getElementById('q-site').value;
+    function setProductPage(page) {
+      productPage = page;
+      renderProds(productView);
+      scrollPanelList('prod-tbl');
+    }
+
+    function filterTbl(resetPage = true) {
+      if (resetPage) productPage = 1;
+      const qInput = document.getElementById('q-s');
+      const globalInput = document.getElementById('global-search');
+      if (globalInput && qInput && globalInput.value !== qInput.value) globalInput.value = qInput.value;
+      const q = normalizeSearchText(qInput.value), st = document.getElementById('q-st').value, siteSt = document.getElementById('q-site').value;
       const matchesPlatform = (p) => {
         if (!st) return true;
         if (activePlatform === 'ambos') return p.EnvTelegram === st || (p.EnvWhatsapp || 'pendente') === st;
@@ -562,9 +705,157 @@ function readManageProductsCache() {
       renderProds(prods.filter(p => normalizeSearchText(p.Título).includes(q) && matchesPlatform(p) && (!siteSt || (siteSt === 'feito' ? (p.Status === 'sim' || p.Status === 'feito') : (p.Status !== 'sim' && p.Status !== 'feito')))));
     }
 
+    function applyGlobalSearch() {
+      const globalInput = document.getElementById('global-search');
+      const qInput = document.getElementById('q-s');
+      const value = globalInput?.value || '';
+      if (qInput && qInput.value !== value) qInput.value = value;
+      if (value.trim() && !document.getElementById('p-produtos')?.classList.contains('active')) {
+        goTo('produtos');
+        return;
+      }
+      if (document.getElementById('p-produtos')?.classList.contains('active')) filterTbl(true);
+    }
+
+    function productImageHtml(p, cls = 'preview-img') {
+      return p?.Imagem
+        ? `<img class="${cls}" src="${esc(p.Imagem)}" loading="lazy" decoding="async" onerror="this.outerHTML='<div class=&quot;${cls}-ph&quot;>🛍️</div>'">`
+        : `<div class="${cls}-ph">🛍️</div>`;
+    }
+
+    function openProductPreview(id, event) {
+      if (!document.getElementById('p-inicio')?.classList.contains('active')) return;
+      if (event?.target?.closest?.('button,a,input,select,textarea')) return;
+      event?.preventDefault?.();
+      event?.stopPropagation?.();
+      const p = findProductById(id);
+      if (!p) return;
+      previewProductId = String(id);
+      renderProductPreview(p);
+      document.getElementById('product-preview')?.classList.add('open');
+      hideProductContext();
+    }
+
+    function openProductContext(id, event) {
+      if (!document.getElementById('p-inicio')?.classList.contains('active')) return;
+      if (event?.target?.closest?.('button,a,input,select,textarea')) return;
+      event?.preventDefault?.();
+      event?.stopPropagation?.();
+      showProductContext(id, event);
+    }
+
+    function closeProductPreview() {
+      previewProductId = null;
+      document.getElementById('product-preview')?.classList.remove('open');
+      hideProductContext();
+    }
+
+    function renderProductPreview(p) {
+      const title = document.getElementById('pv-title');
+      const body = document.getElementById('pv-body');
+      if (!title || !body || !p) return;
+      const safeId = attr(p.ID || '');
+      const isUrg = String(p.Urgente || '').toLowerCase() === 'sim';
+      title.textContent = p.Título || 'Produto';
+      body.innerHTML = `
+        <div class="preview-media">${productImageHtml(p)}</div>
+        <div class="preview-main">
+          <div class="preview-price-row">
+            <strong>${fp(p.Preço)}</strong>
+            <span class="badge ${isUrg ? 'b-urg' : 'b-pau'}">${isUrg ? 'Urgente' : esc(p.Prioridade || 'Prioridade')}</span>
+          </div>
+          <div class="preview-name">${esc(p.Título || 'Produto sem título')}</div>
+          <div class="preview-badges">
+            ${sb(p.EnvTelegram, 'Telegram')}
+            ${sb(p.EnvWhatsapp || 'pendente', 'WhatsApp API')}
+            ${siteb(p.Status)}
+            <span class="badge b-pau">${esc(p.Categoria || 'Geral')}</span>
+          </div>
+          <div class="preview-actions">
+            <button class="btn btn-green btn-full" onclick="qSend('${safeId}', this)">${svgIcon('send')} Enviar agora</button>
+            <button class="btn btn-ghost btn-full ${isUrg ? 'ib-urg' : ''}" onclick="toggleUrgente('${safeId}', this)">${svgIcon('flame')} ${isUrg ? 'Remover urgência' : 'Marcar urgente'}</button>
+            <button class="btn btn-ghost btn-full" onclick="openEdit('${safeId}')">${svgIcon('edit')} Editar dados</button>
+            ${p.Link ? `<a class="btn btn-ghost btn-full" href="${esc(p.Link)}" target="_blank" rel="noopener">${svgIcon('link')} Abrir oferta</a>` : `<button class="btn btn-ghost btn-full" disabled>${svgIcon('link')} Sem link</button>`}
+          </div>
+          <div class="preview-detail-grid">
+            <div><span>ID</span><strong>#${esc(String(p.ID || '').substring(0, 12) || '—')}</strong></div>
+            <div><span>Data</span><strong>${esc(p.Data || '—')}</strong></div>
+            <div><span>Shop</span><strong>${esc(p.ShopId || '—')}</strong></div>
+            <div><span>Item</span><strong>${esc(p.ItemId || '—')}</strong></div>
+            <div><span>Estoque</span><strong>${esc(p.Estoque || '—')}</strong></div>
+            <div><span>Última verificação</span><strong>${esc(p.UltimaVerif || '—')}</strong></div>
+          </div>
+          <div class="preview-note">
+            <span>Notas internas</span>
+            <p>${esc(p.Comentário || p['Comentário'] || 'Sem observações.')}</p>
+          </div>
+        </div>`;
+    }
+
+    function showProductContext(id, event) {
+      const menu = document.getElementById('product-context');
+      if (!menu || !event?.clientX) return;
+      const p = findProductById(id);
+      if (!p) return;
+      const safeId = attr(id);
+      const isUrg = String(p.Urgente || '').toLowerCase() === 'sim';
+      menu.innerHTML = `
+        <button onclick="event.stopPropagation();qSend('${safeId}', null);hideProductContext()">${svgIcon('send')} Enviar</button>
+        <button onclick="event.stopPropagation();toggleUrgente('${safeId}', null);hideProductContext()">${svgIcon('flame')} ${isUrg ? 'Remover urgência' : 'Urgente'}</button>
+        <button onclick="event.stopPropagation();openEdit('${safeId}');hideProductContext()">${svgIcon('edit')} Editar</button>
+        ${p.Link ? `<a href="${esc(p.Link)}" target="_blank" rel="noopener" onclick="event.stopPropagation();hideProductContext()">${svgIcon('link')} Abrir link</a>` : ''}
+      `;
+      menu.classList.add('open');
+      menu.setAttribute('aria-hidden', 'false');
+      const pad = 14;
+      const rectWidth = 190;
+      const left = Math.min(event.clientX + 12, window.innerWidth - rectWidth - pad);
+      const top = Math.min(event.clientY + 12, window.innerHeight - 190);
+      menu.style.left = `${Math.max(pad, left)}px`;
+      menu.style.top = `${Math.max(pad, top)}px`;
+    }
+
+    function hideProductContext() {
+      const menu = document.getElementById('product-context');
+      if (!menu) return;
+      menu.classList.remove('open');
+      menu.setAttribute('aria-hidden', 'true');
+    }
+
+    function refreshProductViews(resetPage = false) {
+      renderStats();
+      renderHome();
+      updateBadges();
+      if (document.getElementById('p-produtos')?.classList.contains('active')) filterTbl(resetPage);
+      if (previewProductId) {
+        const p = findProductById(previewProductId);
+        if (p) renderProductPreview(p);
+      }
+    }
+
+    function applyProductSendLocally(product, selected, results = {}) {
+      if (!product) return;
+      const platform = normalizePlatformKey(selected);
+      const platforms = platform === 'ambos' ? ['telegram', 'whatsapp'] : [platform];
+      platforms.forEach(pf => {
+        const result = results[pf];
+        product[platformField(pf)] = result && result.ok === false ? 'erro' : 'feito';
+      });
+      saveManageProductsCache(prods);
+      refreshProductViews(false);
+      _historyLoadedAt = 0;
+    }
+
+    function scheduleProductSync(delay = 1800) {
+      clearTimeout(_productSyncTimer);
+      _productSyncTimer = setTimeout(() => {
+        loadAll(true).catch(e => addLog(`Sync em segundo plano falhou: ${e.message}`, 'warn'));
+      }, delay);
+    }
+
     // -- TOGGLE URGENTE --
     async function toggleUrgente(id, btnEl) {
-      const p = prods.find(x => x.ID === id);
+      const p = findProductById(id);
       if (!p) return;
 
       const novoEstado = String(p.Urgente || '').toLowerCase() !== 'sim';
@@ -590,9 +881,7 @@ function readManageProductsCache() {
         );
         addLog(`Urgente=${novoEstado ? 'sim' : 'nao'} → produto ${id}`, novoEstado ? 'warn' : 'info');
 
-        const painelAtivo = document.querySelector('.panel.active');
-        if (painelAtivo?.id === 'p-produtos') filterTbl();
-        else renderHome();
+        refreshProductViews(false);
 
       } catch (e) {
         toast('Erro ao atualizar urgência: ' + e.message, 'err');
@@ -602,11 +891,28 @@ function readManageProductsCache() {
     }
 
     // -- CRONS (AUTOMAÇÃO) --
-    async function loadCrons() {
-      try {
-        const j = await apiGet({ action: 'listar_crons' });
-        if (j.status === 'sucesso') { cronData = j.crons || []; renderCrons(); }
-      } catch (e) { console.error("Erro ao carregar crons", e); }
+    async function loadCrons(force = false) {
+      if (!force && _cronsLoadedAt && Date.now() - _cronsLoadedAt < CRON_CACHE_TTL) {
+        renderCrons();
+        return;
+      }
+      if (_cronPromise && !force) return _cronPromise;
+
+      _cronPromise = (async () => {
+        try {
+          const j = await apiGet({ action: 'listar_crons' });
+          if (j.status === 'sucesso') {
+            cronData = j.crons || [];
+            _cronsLoadedAt = Date.now();
+            renderCrons();
+          }
+        } catch (e) {
+          console.error("Erro ao carregar crons", e);
+        } finally {
+          _cronPromise = null;
+        }
+      })();
+      return _cronPromise;
     }
 
     function renderCrons() {
@@ -647,9 +953,9 @@ function readManageProductsCache() {
           </div>
           <div class="cron-tmpl-preview">${hasTemplate ? esc(c.Template) : '<i>Usará o template base do bot</i>'}</div>
           <div style="display:grid;grid-template-columns:1.2fr 1fr auto;gap:8px;margin-top:10px">
-            <button class="btn btn-green btn-sm btn-full" id="btn-disp-${safeId}" onclick="dispararCronAgora('${safeId}')" ${ativo ? '' : 'disabled title="Ative o cron para disparar manualmente"'}>▶ Disparar agora</button>
-            <button class="btn btn-ghost btn-sm btn-full" onclick="openCronModal('${safeId}')">✏️ Editar</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteCron('${safeId}')">🗑</button>
+            <button class="btn btn-green btn-sm btn-full" id="btn-disp-${safeId}" onclick="dispararCronAgora('${safeId}')" ${ativo ? '' : 'disabled title="Ative o cron para disparar manualmente"'}>${svgIcon('play')} Disparar agora</button>
+            <button class="btn btn-ghost btn-sm btn-full" onclick="openCronModal('${safeId}')">${svgIcon('edit')} Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteCron('${safeId}')" title="Excluir agendamento">${svgIcon('trash')}</button>
           </div>
         </div>`;
       }).join('');
@@ -716,7 +1022,7 @@ function readManageProductsCache() {
       btn.disabled = true; sp.classList.add('on');
       try {
         const r = await apiPost({ action: 'salvar_cron', id, horario, ativo, template, imagem, plataformas });
-        if (r.status === 'sucesso') { toast('Agendamento salvo na Planilha!'); closeCronModal(); await loadCrons(); await syncBotCrons(); }
+        if (r.status === 'sucesso') { toast('Agendamento salvo na Planilha!'); closeCronModal(); await loadCrons(true); await syncBotCrons(); }
       } catch (e) { toast('Erro ao salvar', 'err'); } finally { btn.disabled = false; sp.classList.remove('on'); }
     }
 
@@ -724,7 +1030,7 @@ function readManageProductsCache() {
       if (!confirm('Excluir este horário?')) return;
       try {
         const r = await apiPost({ action: 'deletar_cron', id });
-        if (r.status === 'sucesso') { toast('Excluído da Planilha!'); await loadCrons(); await syncBotCrons(); }
+        if (r.status === 'sucesso') { toast('Excluído da Planilha!'); await loadCrons(true); await syncBotCrons(); }
       } catch (e) { toast('Erro ao excluir', 'err'); }
     }
 
@@ -737,16 +1043,39 @@ function readManageProductsCache() {
     }
 
     // -- HISTÓRICO --
-    async function loadHistorico() {
-      const grid = document.getElementById('hist-grid'); grid.innerHTML = '<div style="grid-column:1/-1"><div class="empty"><div class="eico">⏳</div>Buscando histórico…</div></div>';
-      try {
-        const j = await apiGet({ action: 'listar_historico' });
-        if (j.status === 'sucesso') { historicoData = j.historico || []; renderHistoricoGrid(historicoData); addLog(`Histórico: ${historicoData.length} itens.`, 'ok'); }
-        else grid.innerHTML = '<div style="grid-column:1/-1"><div class="empty"><div class="eico">⚠️</div>Erro ao carregar histórico.</div></div>';
-      } catch (e) { grid.innerHTML = '<div style="grid-column:1/-1"><div class="empty"><div class="eico">⚠️</div>Falha de conexão.</div></div>'; }
+    async function loadHistorico(force = false) {
+      const grid = document.getElementById('hist-grid');
+      if (!force && historicoData.length && Date.now() - _historyLoadedAt < HISTORY_CACHE_TTL) {
+        filterHistorico(false);
+        return;
+      }
+      if (_historyPromise && !force) return _historyPromise;
+
+      if (grid) grid.innerHTML = '<div style="grid-column:1/-1"><div class="empty"><div class="eico">⏳</div>Buscando histórico…</div></div>';
+      _historyPromise = (async () => {
+        try {
+          const j = await apiGet({ action: 'listar_historico' });
+          if (j.status === 'sucesso') {
+            historicoData = j.historico || [];
+            _historyLoadedAt = Date.now();
+            filterHistorico(false);
+            addLog(`Histórico: ${historicoData.length} itens.`, 'ok');
+          } else if (grid) {
+            grid.innerHTML = '<div style="grid-column:1/-1"><div class="empty"><div class="eico">⚠️</div>Erro ao carregar histórico.</div></div>';
+            renderPagination('hist-pagination', 0, historyPage, 'setHistoryPage', 'itens');
+          }
+        } catch (e) {
+          if (grid) grid.innerHTML = '<div style="grid-column:1/-1"><div class="empty"><div class="eico">⚠️</div>Falha de conexão.</div></div>';
+          renderPagination('hist-pagination', 0, historyPage, 'setHistoryPage', 'itens');
+        } finally {
+          _historyPromise = null;
+        }
+      })();
+      return _historyPromise;
     }
 
-    function filterHistorico() {
+    function filterHistorico(resetPage = true) {
+      if (resetPage) historyPage = 1;
       const q = normalizeSearchText(document.getElementById('h-s').value);
       const hp = document.getElementById('h-platform')?.value || '';
       renderHistoricoGrid(historicoData.filter(h => {
@@ -757,10 +1086,18 @@ function readManageProductsCache() {
     }
 
     function renderHistoricoGrid(data) {
-      const grid = document.getElementById('hist-grid'), total = data.length, suc = data.filter(h => (h.Status_Final || '').toLowerCase() === 'sucesso').length;
+      historyView = Array.isArray(data) ? data : [];
+      const grid = document.getElementById('hist-grid'), total = historyView.length, suc = historyView.filter(h => (h.Status_Final || '').toLowerCase() === 'sucesso').length;
       document.getElementById('h-tot').textContent = total; document.getElementById('h-suc').textContent = suc; document.getElementById('h-err').textContent = total - suc;
-      if (!data.length) { grid.innerHTML = '<div style="grid-column:1/-1"><div class="empty"><div class="eico">📭</div>Nada registrado.</div></div>'; return; }
-      grid.innerHTML = data.map(h => {
+      const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      historyPage = clampPage(historyPage, totalPages);
+      const pageItems = historyView.slice((historyPage - 1) * PAGE_SIZE, historyPage * PAGE_SIZE);
+      if (!total) {
+        grid.innerHTML = '<div style="grid-column:1/-1"><div class="empty"><div class="eico">📭</div>Nada registrado.</div></div>';
+        renderPagination('hist-pagination', 0, historyPage, 'setHistoryPage', 'itens');
+        return;
+      }
+      grid.innerHTML = pageItems.map((h, index) => {
         const msgId = h.MessageID || '';
         const isCron = (h.ID_Produto || '').startsWith('CRON_');
         const isCronManual = (h.ID_Produto || '').startsWith('CRON_MANUAL_');
@@ -768,7 +1105,7 @@ function readManageProductsCache() {
         const hPlatKey = hPlat.toLowerCase() === 'whatsapp' ? 'whatsapp' : 'telegram';
 
         if (isCron) {
-          return `<div class="hist-card">
+          return `<div class="hist-card" style="--i:${Math.min(index, 12)}">
         <div class="hist-card-img-ph" style="background:var(--accent-l);color:var(--accent);font-size:22px">⏰</div>
         <div class="hist-card-body">
           <div class="hist-card-meta"><span class="badge ${h.Status_Final === 'sucesso' ? 'b-done' : 'b-no'}">${esc(h.Status_Final || '—')}</span><span class="hist-card-platform" style="color:var(--accent);font-weight:800">${isCronManual ? 'CRON Manual' : 'Banner CRON'} · ${esc(hPlat)}</span></div>
@@ -777,13 +1114,13 @@ function readManageProductsCache() {
           ${msgId ? `<div style="font-size:10px;color:var(--text3);margin-top:5px;font-family:var(--mono)">msg_id: ${esc(msgId)}</div>` : ''}
         </div>
         <div class="hist-card-footer">
-          <button class="btn btn-danger btn-xs btn-full" onclick="apagarCron('${h.ID_Produto}', '${msgId}', '${hPlatKey}')">${hPlatKey === 'whatsapp' ? '🧹 Limpar histórico' : '🗑️ Apagar do Canal'}</button>
+          <button class="btn btn-danger btn-xs btn-full" onclick="apagarCron('${h.ID_Produto}', '${msgId}', '${hPlatKey}')">${svgIcon('trash')} ${hPlatKey === 'whatsapp' ? 'Limpar histórico' : 'Apagar do Canal'}</button>
         </div>
       </div>`;
         }
 
-        const prod = prods.find(p => p.ID === h.ID_Produto) || {}, titulo = prod.Título || h.ID_Produto || 'Produto', imagem = prod.Imagem || '', preco = prod.Preço ? fp(prod.Preço) : '—';
-        return `<div class="hist-card">
+        const prod = findProductById(h.ID_Produto) || {}, titulo = prod.Título || h.ID_Produto || 'Produto', imagem = prod.Imagem || '', preco = prod.Preço ? fp(prod.Preço) : '—';
+        return `<div class="hist-card" style="--i:${Math.min(index, 12)}">
       ${imagem ? `<img class="hist-card-img" src="${esc(imagem)}" onerror="this.src='';this.className='hist-card-img-ph';this.innerHTML='🛍'">` : `<div class="hist-card-img-ph">🛍</div>`}
       <div class="hist-card-body">
         <div class="hist-card-meta"><span class="badge ${h.Status_Final === 'sucesso' ? 'b-done' : 'b-no'}">${esc(h.Status_Final || '—')}</span><span class="hist-card-platform">${esc(hPlat)}</span></div>
@@ -792,16 +1129,23 @@ function readManageProductsCache() {
         ${msgId ? `<div style="font-size:10px;color:var(--text3);margin-top:5px;font-family:var(--mono)">msg_id: ${esc(msgId)}</div>` : ''}
       </div>
       <div class="hist-card-footer">
-        <button class="btn btn-ghost btn-xs" onclick="qSend('${h.ID_Produto}', null, '${hPlatKey}')">🔄 Reenviar</button>
-        <button class="btn btn-danger btn-xs" onclick="apagarMensagem('${h.ID_Produto}', '${msgId}', '${hPlatKey}')">${hPlatKey === 'whatsapp' ? '🧹 Limpar' : '🗑️ Excluir'}</button>
+        <button class="btn btn-ghost btn-xs" onclick="qSend('${h.ID_Produto}', null, '${hPlatKey}')">${svgIcon('refresh')} Reenviar</button>
+        <button class="btn btn-danger btn-xs" onclick="apagarMensagem('${h.ID_Produto}', '${msgId}', '${hPlatKey}')">${svgIcon('trash')} ${hPlatKey === 'whatsapp' ? 'Limpar' : 'Excluir'}</button>
       </div>
     </div>`;
       }).join('');
+      renderPagination('hist-pagination', total, historyPage, 'setHistoryPage', 'itens');
+    }
+
+    function setHistoryPage(page) {
+      historyPage = page;
+      renderHistoricoGrid(historyView);
+      scrollPanelList('hist-grid');
     }
 
     // -- AÇÕES DO BOT --
     async function qSend(id, btnEl, plataformas = activePlatform) {
-      const p = prods.find(x => x.ID === id);
+      const p = findProductById(id);
       if (!p) return;
       if (btnEl) btnEl.disabled = true;
       const selected = platformPayload(plataformas);
@@ -831,7 +1175,11 @@ function readManageProductsCache() {
         }
         logPlatformIssues(j, 'Oferta');
         toastPlatformResult(j, isUrg ? '🔥 Oferta URGENTE enviada!' : 'Enviado com sucesso!');
-        await loadAll(true);
+        applyProductSendLocally(p, selected, results);
+        if (document.getElementById('p-historico')?.classList.contains('active')) {
+          loadHistorico(true).catch(e => addLog(`Histórico não atualizou: ${e.message}`, 'warn'));
+        }
+        scheduleProductSync();
       } catch (e) { toast(e.message, 'err'); } finally { if (btnEl) btnEl.disabled = false; }
     }
 
@@ -863,12 +1211,12 @@ function readManageProductsCache() {
         logPlatformIssues(j, `Cron ${cron.ID}`);
         toastPlatformResult(j, '⏰ Agendamento disparado com sucesso!');
         addLog(`Cron ${cron.ID} retorno=${j.status || '—'} message_id=${j.message_id || '—'}`, j.ok_all || j.status === 'sucesso' ? 'ok' : 'warn');
-        try { await loadHistorico(); } catch (_) { }
+        try { await loadHistorico(true); } catch (_) { }
       } catch (e) {
         toast(e.message, 'err');
         addLog(`Erro no disparo manual do cron ${cron.ID}: ${e.message}`, 'err');
       } finally {
-        if (btn) { btn.disabled = false; btn.innerHTML = oldHtml || '▶ Disparar agora'; }
+        if (btn) { btn.disabled = false; btn.innerHTML = oldHtml || `${svgIcon('play')} Disparar agora`; }
       }
     }
 
@@ -896,7 +1244,7 @@ function readManageProductsCache() {
         try {
           await apiPost({ action: 'apagar_historico', id_produto: id, message_id: msgId, plataforma: 'WhatsApp' });
           toast('Histórico do WhatsApp API limpo.');
-          await loadAll(true); await loadHistorico();
+          await loadAll(true); await loadHistorico(true);
         } catch (err) { toast('Erro ao limpar histórico.', 'err'); }
         return;
       }
@@ -910,12 +1258,10 @@ function readManageProductsCache() {
         if (e.message.includes("not found")) botOk = true; else toast(e.message, 'err');
       }
       if (botOk) {
-        try { await apiPost({ action: 'apagar_historico', id_produto: id, message_id: msgId, plataforma: 'Telegram' }); toast('Apagado e restaurado!'); await loadAll(true); await loadHistorico(); }
+        try { await apiPost({ action: 'apagar_historico', id_produto: id, message_id: msgId, plataforma: 'Telegram' }); toast('Apagado e restaurado!'); await loadAll(true); await loadHistorico(true); }
         catch (err) { toast('Erro ao limpar histórico.', 'err'); }
       }
     }
-
-    function apagarTelegram(id, msgId) { return apagarMensagem(id, msgId, 'telegram'); }
 
     async function apagarCron(cronId, msgId, plataforma = 'telegram') {
       const isWhatsapp = normalizePlatformKey(plataforma) === 'whatsapp';
@@ -925,7 +1271,7 @@ function readManageProductsCache() {
         if (!confirm('Limpar apenas o histórico deste banner do WhatsApp API?')) return;
         try {
           await apiPost({ action: 'apagar_historico', id_produto: cronId, message_id: msgId, plataforma: 'WhatsApp' });
-          toast('Histórico do banner limpo.'); await loadHistorico();
+          toast('Histórico do banner limpo.'); await loadHistorico(true);
         } catch (err) { toast('Erro ao limpar histórico.', 'err'); }
         return;
       }
@@ -941,14 +1287,14 @@ function readManageProductsCache() {
       if (botOk) {
         try {
           await apiPost({ action: 'apagar_historico', id_produto: cronId, message_id: msgId, plataforma: 'Telegram' });
-          toast('Banner apagado do canal!'); await loadHistorico();
+          toast('Banner apagado do canal!'); await loadHistorico(true);
         } catch (err) { toast('Erro ao limpar histórico.', 'err'); }
       }
     }
 
     // -- EDIÇÃO PRODUTO (MODAL) --
     function openEdit(id) {
-      const p = prods.find(x => x.ID === id); if (!p) return;
+      const p = findProductById(id); if (!p) return;
       document.getElementById('e-id').value = id; document.getElementById('e-st').value = p.EnvTelegram || 'pendente'; if(document.getElementById('e-wa')) document.getElementById('e-wa').value = p.EnvWhatsapp || 'pendente'; document.getElementById('e-site').value = p.Status || 'pendente'; document.getElementById('e-pr').value = p.Prioridade || 'média'; document.getElementById('e-cat').value = p.Categoria || ''; document.getElementById('e-com').value = p['Comentário'] || '';
       document.getElementById('modal-edit').classList.add('open');
     }
@@ -956,8 +1302,17 @@ function readManageProductsCache() {
     async function saveEdit() {
       const id = document.getElementById('e-id').value, btn = document.getElementById('btn-save-edit'), sp = document.getElementById('save-sp'); btn.disabled = true; sp.classList.add('on');
       try {
-        const j = await apiPost({ action: 'atualizar', id, campos: { 'EnvTelegram': document.getElementById('e-st').value, 'EnvWhatsapp': document.getElementById('e-wa') ? document.getElementById('e-wa').value : 'pendente', 'Status': document.getElementById('e-site').value, 'Prioridade': document.getElementById('e-pr').value, 'Categoria': document.getElementById('e-cat').value, 'Comentário': document.getElementById('e-com').value } });
-        if (j.status === 'sucesso') { toast('Atualizado!'); closeModal(); await loadAll(true); }
+        const campos = { 'EnvTelegram': document.getElementById('e-st').value, 'EnvWhatsapp': document.getElementById('e-wa') ? document.getElementById('e-wa').value : 'pendente', 'Status': document.getElementById('e-site').value, 'Prioridade': document.getElementById('e-pr').value, 'Categoria': document.getElementById('e-cat').value, 'Comentário': document.getElementById('e-com').value };
+        const j = await apiPost({ action: 'atualizar', id, campos });
+        if (j.status === 'sucesso') {
+          const p = findProductById(id);
+          if (p) Object.assign(p, campos);
+          saveManageProductsCache(prods);
+          refreshProductViews(false);
+          toast('Atualizado!');
+          closeModal();
+          scheduleProductSync();
+        }
       } catch (e) { toast('Erro ao salvar', 'err') } finally { btn.disabled = false; sp.classList.remove('on') }
     }
 
@@ -1012,7 +1367,7 @@ function readManageProductsCache() {
     }
     function closeDrawer() { document.getElementById('drawer').classList.remove('open') }
     function onDrSel() {
-      const p = prods.find(x => x.ID === document.getElementById('d-sel').value);
+      const p = findProductById(document.getElementById('d-sel').value);
       if (p) {
         document.getElementById('d-lnk').value = p.Link || '';
         document.getElementById('d-tit').value = p.Título || '';
@@ -1090,3 +1445,27 @@ function readManageProductsCache() {
     } else {
       initManageBot();
     }
+
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!target.closest?.('#product-context') && !target.closest?.('.queue-card')) hideProductContext();
+      if (!target.closest?.('#product-preview') && !target.closest?.('.queue-card') && !target.closest?.('#product-context')) closeProductPreview();
+      if (target.classList?.contains('overlay') && target.classList.contains('open')) {
+        target.classList.remove('open');
+        if (target.id === 'modal-cron') document.getElementById('c-img-preview').style.display = 'none';
+      }
+      if (document.getElementById('drawer')?.classList.contains('open') && !target.closest?.('#drawer') && !target.closest?.('[data-drawer-trigger]')) closeDrawer();
+    });
+
+    document.addEventListener('contextmenu', (event) => {
+      if (!event.target.closest?.('.queue-card') && !event.target.closest?.('#product-context')) hideProductContext();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      hideProductContext();
+      closeProductPreview();
+      closeDrawer();
+      document.querySelectorAll('.overlay.open').forEach(overlay => overlay.classList.remove('open'));
+      if (document.getElementById('c-img-preview')) document.getElementById('c-img-preview').style.display = 'none';
+    });
